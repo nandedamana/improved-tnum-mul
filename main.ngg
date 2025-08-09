@@ -1,0 +1,122 @@
+// 2025-08-09
+
+vh #include <stdint.h>
+vh #include "lib.h"
+
+vh typedef struct tnum tnum;
+
+include vector
+
+shadow of tnum struct tnum
+	value u64; mask u64;;
+shadow fun TNUM gives tnum takes v, m u64;
+shadow fun tnum_mul gives tnum takes a, b tnum;
+shadow fun wellformed gives bool takes x tnum;
+shadow fun ingamma gives bool takes x u64, T tnum;
+shadow fun print_tnum takes lbl string, x tnum;
+
+// Careful when increasing this; ASSERT1 could fail; read the related comment.
+var MAX_U64 u64 / 16
+
+bake vector with u64 as u64vector
+
+// Can't name "gamma" because that's in libm
+fun getgamma gives u64vector takes T tnum
+	local vec new u64vector
+
+	for x from 0u upto (bito mask\T value\T) // max is mask|value
+		if =ingamma/[x, T]
+			=append\vec/[x];;
+	;
+
+	return steal vec
+;
+
+// TODO use set instead
+// Yes, duplicates are a reality when multiplying gamma(P) with gamma(Q)
+fun append-nondup takes vec u64vector, x u64
+	// Can't assume vec is sorted
+	for y in vec
+		if eq y x
+			return;;;
+
+	=append\vec/[x]
+;
+
+fun mulvec gives u64vector takes avec, bvec u64vector
+	local vec new u64vector
+
+	for a in avec
+		for b in bvec
+			=append-nondup/[vec, mul a b];;;
+
+	return steal vec
+;
+
+fun printvec takes lbl string, vec u64vector
+	=printf/["%s = { ", lbl]
+
+	for x in vec
+		=printf/["%zu, ", x];;
+
+	=puts/[" }"]
+;
+
+fun test takes P, Q tnum
+	var linprod tnum / =tnum_mul/[P, Q]
+
+	local gamma_linprod / =getgamma/[linprod]
+	local gamma_P / =getgamma/[P]
+	local gamma_Q / =getgamma/[Q]
+	local optprodvec / =mulvec/[gamma_P, gamma_Q]
+
+	=print_tnum/["P", P]
+	=print_tnum/["Q", Q]
+	=print_tnum/["linprod", linprod]
+
+	=printf/['count(gamma_linprod) = %d\n', =get-count\gamma_linprod]
+	=printf/['count(gamma_P) = %d\n', =get-count\gamma_P]
+	=printf/['count(gamma_Q) = %d\n', =get-count\gamma_Q]
+	=printf/['count(optprodvec) = %d\n', =get-count\optprodvec]
+
+	=printvec/["gamma_linprod", gamma_linprod]
+	=printvec/["gamma_P", gamma_P]
+	=printvec/["gamma_Q", gamma_Q]
+	=printvec/["optprodvec", optprodvec]
+
+	// While count(gamma_linprod) > count(optprodvec) simply means tnum_mul() is
+	// suboptimal, 	// count(gamma_linprod) < count(optprodvec) means tnum_mul()
+	// is unsound.
+	// NOTE: ASSERT1: This could fail even if tnum_mul() is sound if MAX_U64
+	// is too high to the point that the truncation due to gamma(abstract_prod)
+	// results in a smaller set.
+	assert not lt =get-count\gamma_linprod =get-count\optprodvec
+
+	if gt =get-count\gamma_linprod =get-count\optprodvec
+		=puts/['^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Suboptimal!'];;
+
+	=puts/['']
+;
+
+fun $main
+	// Generate all possible well-formed abstract pairs (P, Q) within the range
+	for xm from 0u upto MAX_U64
+		for xv from 0u upto MAX_U64
+			var x / =TNUM/[xv, xm]
+			if not =wellformed/[x]
+				continue;;
+
+			for ym from 0u upto MAX_U64
+				for yv from 0u upto MAX_U64
+					var y / =TNUM/[yv, ym]
+					if not =wellformed/[y]
+						continue;;
+
+					=test/[x, y]
+				;
+			;
+		;
+	;
+
+	return 0;
+;
