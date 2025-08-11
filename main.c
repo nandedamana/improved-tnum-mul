@@ -176,7 +176,7 @@ void printvec(const char * lbl, u64vector *vec)
 	puts(" }");
 }
 
-void test(tnum P, tnum Q)
+_Bool isoptimal(tnum P, tnum Q)
 {
 	tnum linprod = tnum_mul(P, Q);
 
@@ -194,18 +194,17 @@ void test(tnum P, tnum Q)
 	printf("count(gamma_Q) = %d\n", u64vector_get_count(gamma_Q));
 	printf("count(optprodvec) = %d\n", u64vector_get_count(optprodvec));
 
-	printvec("gamma_linprod", gamma_linprod);
-	printvec("gamma_P", gamma_P);
-	printvec("gamma_Q", gamma_Q);
-	printvec("optprodvec", optprodvec);
+	assert(!(u64vector_get_count(gamma_linprod) < u64vector_get_count(optprodvec))); /* main.ngg:97 */
 
-	assert(!(u64vector_get_count(gamma_linprod) < u64vector_get_count(optprodvec))); /* main.ngg:93 */
+	_Bool optimal = true;
 
 	if(u64vector_get_count(gamma_linprod) > u64vector_get_count(optprodvec)) {
+		optimal = false;
 		puts("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Suboptimal!");
 	}
 
 	puts("");
+
 	if(gamma_linprod) {
 		u64vector_destruct(gamma_linprod);
 		free(gamma_linprod);
@@ -225,32 +224,48 @@ void test(tnum P, tnum Q)
 		u64vector_destruct(optprodvec);
 		free(optprodvec);
 	}
+
+	return optimal;
 }
 
 int main(int argc, char * *argv)
 {
-	size_t xm;
-	for(xm = 0u; xm <= MAX_U64; xm += 1) {
-		size_t xv;
-		for(xv = 0u; xv <= MAX_U64; xv += 1) {
-			size_t ym;
-			tnum x = TNUM(xv, xm);
-			if(!wellformed(x)) {
-				continue;
-			}
+	size_t _ngg_tmp_4;
+	int bits;
+	int BITS[4] = {1, 2, 4, 8};
 
-			for(ym = 0u; ym <= MAX_U64; ym += 1) {
-				size_t yv;
-				for(yv = 0u; yv <= MAX_U64; yv += 1) {
-					tnum y = TNUM(yv, ym);
-					if(!wellformed(y)) {
-						continue;
+	for(_ngg_tmp_4 = 0u; _ngg_tmp_4 < (sizeof BITS / sizeof BITS[0]); _ngg_tmp_4 += (1u)) {
+		size_t xm;
+		bits = BITS[_ngg_tmp_4];
+		unsigned int maxnum = (unsigned int) (pow(2, bits) - 1);
+		_Bool optimal_for_bits = true;
+
+		for(xm = 0u; xm <= maxnum; xm += 1) {
+			size_t xv;
+			for(xv = 0u; xv <= maxnum; xv += 1) {
+				size_t ym;
+				tnum x = TNUM(xv, xm);
+				if(!wellformed(x)) {
+					continue;
+				}
+
+				for(ym = 0u; ym <= maxnum; ym += 1) {
+					size_t yv;
+					for(yv = 0u; yv <= maxnum; yv += 1) {
+						tnum y = TNUM(yv, ym);
+						if(!wellformed(y)) {
+							continue;
+						}
+
+						if(!isoptimal(x, y)) {
+							optimal_for_bits = false;
+						}
 					}
-
-					test(x, y);
 				}
 			}
 		}
+
+		printf("optimal for %d bits = %d\n", bits, optimal_for_bits);
 	}
 
 	return 0;

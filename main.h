@@ -4,6 +4,7 @@ typedef struct u64vector u64vector;
 #include <stdio.h>
 #include <stdint.h>
 #include "lib.h"
+#include <math.h>
 typedef struct tnum tnum;
 extern uint64_t MAX_U64;
 struct u64vector {
@@ -26,5 +27,5 @@ u64vector * getgamma(tnum T);
 void append_nondup(u64vector *vec, uint64_t x);
 u64vector * mulvec(u64vector *avec, u64vector *bvec);
 void printvec(const char * lbl, u64vector *vec);
-void test(tnum P, tnum Q);
+_Bool isoptimal(tnum P, tnum Q);
 int main(int argc, char * *argv);

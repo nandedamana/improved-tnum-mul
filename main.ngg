@@ -3,9 +3,10 @@
 vh #include <stdint.h>
 vh #include "lib.h"
 
-vh typedef struct tnum tnum;
-
+refer math
 include vector
+
+vh typedef struct tnum tnum;
 
 shadow of tnum struct tnum
 	value u64; mask u64;;
@@ -62,7 +63,8 @@ fun printvec takes lbl string, vec u64vector
 	=puts/[" }"]
 ;
 
-fun test takes P, Q tnum
+// Returns false if suboptimal
+fun isoptimal gives bool takes P, Q tnum
 	var linprod tnum / =tnum_mul/[P, Q]
 
 	local gamma_linprod / =getgamma/[linprod]
@@ -79,10 +81,12 @@ fun test takes P, Q tnum
 	=printf/['count(gamma_Q) = %d\n', =get-count\gamma_Q]
 	=printf/['count(optprodvec) = %d\n', =get-count\optprodvec]
 
+	/*
 	=printvec/["gamma_linprod", gamma_linprod]
 	=printvec/["gamma_P", gamma_P]
 	=printvec/["gamma_Q", gamma_Q]
 	=printvec/["optprodvec", optprodvec]
+	*/
 
 	// While count(gamma_linprod) > count(optprodvec) simply means tnum_mul() is
 	// suboptimal, 	// count(gamma_linprod) < count(optprodvec) means tnum_mul()
@@ -92,30 +96,48 @@ fun test takes P, Q tnum
 	// results in a smaller set.
 	assert not lt =get-count\gamma_linprod =get-count\optprodvec
 
+	var optimal / true
+
 	if gt =get-count\gamma_linprod =get-count\optprodvec
-		=puts/['^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Suboptimal!'];;
+		==optimal false
+		=puts/['^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Suboptimal!']
+	;
 
 	=puts/['']
+
+	return optimal
 ;
 
 fun $main
-	// Generate all possible well-formed abstract pairs (P, Q) within the range
-	for xm from 0u upto MAX_U64
-		for xv from 0u upto MAX_U64
-			var x / =TNUM/[xv, xm]
-			if not =wellformed/[x]
-				continue;;
+	var BITS / [1, 2, 4, 8]
 
-			for ym from 0u upto MAX_U64
-				for yv from 0u upto MAX_U64
-					var y / =TNUM/[yv, ym]
-					if not =wellformed/[y]
-						continue;;
+	// TODO tnums generated for testing n+1 bits is a superset of tnums generated
+	// for n bits; memoize or skip.
+	for bits in BITS
+		var maxnum / as uint sub =pow/[2, bits] 1
+		var optimal_for_bits / true
 
-					=test/[x, y]
+		// Generate all possible well-formed abstract pairs (P, Q) within the range
+		for xm from 0u upto maxnum
+			for xv from 0u upto maxnum
+				var x / =TNUM/[xv, xm]
+				if not =wellformed/[x]
+					continue;;
+
+				for ym from 0u upto maxnum
+					for yv from 0u upto maxnum
+						var y / =TNUM/[yv, ym]
+						if not =wellformed/[y]
+							continue;;
+
+						if not =isoptimal/[x, y]
+							==optimal_for_bits false;;
+					;
 				;
 			;
 		;
+
+		=printf/['optimal for %d bits = %d\n', bits, optimal_for_bits]
 	;
 
 	return 0;
