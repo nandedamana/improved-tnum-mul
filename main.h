@@ -23,6 +23,8 @@ int u64vector_get_count(u64vector *this);
 _Bool u64vector_is_empty(u64vector *this);
 void u64vector_destruct(u64vector *this);
 void u64vector_construct(u64vector *this);
+tnum tnum_union(tnum t1, tnum t2);
+tnum getalpha(u64vector *xs);
 u64vector * getgamma(tnum T);
 void append_nondup(u64vector *vec, uint64_t x);
 u64vector * mulvec(u64vector *avec, u64vector *bvec);

@@ -97,6 +97,30 @@ void u64vector_construct(u64vector *this)
 	this->count = 0;
 }
 
+tnum tnum_union(tnum t1, tnum t2)
+{
+	uint64_t value = t1.value & t2.value;
+	uint64_t mask = ((t1.value ^ t2.value) | t1.mask) | t2.mask;
+
+	return TNUM(value & (~mask), mask);
+}
+
+tnum getalpha(u64vector *xs)
+{
+	int _ngg_tmp_0;
+	uint64_t x;
+	assert(u64vector_get_count(xs) > 0); /* main.ngg:34 */
+
+	tnum T = TNUM(u64vector_get_item(xs, 0), 0);
+
+	for(_ngg_tmp_0 = 0; _ngg_tmp_0 < u64vector_get_count(xs); _ngg_tmp_0 += 1) {
+		x = u64vector_get_item(xs, _ngg_tmp_0);
+		T = tnum_union(T, TNUM(x, 0));
+	}
+
+	return T;
+}
+
 u64vector * getgamma(tnum T)
 {
 	size_t x;
@@ -122,10 +146,10 @@ u64vector * getgamma(tnum T)
 
 void append_nondup(u64vector *vec, uint64_t x)
 {
-	int _ngg_tmp_0;
+	int _ngg_tmp_1;
 	uint64_t y;
-	for(_ngg_tmp_0 = 0; _ngg_tmp_0 < u64vector_get_count(vec); _ngg_tmp_0 += 1) {
-		y = u64vector_get_item(vec, _ngg_tmp_0);
+	for(_ngg_tmp_1 = 0; _ngg_tmp_1 < u64vector_get_count(vec); _ngg_tmp_1 += 1) {
+		y = u64vector_get_item(vec, _ngg_tmp_1);
 		if(y == x) {
 			return;
 		}
@@ -136,7 +160,7 @@ void append_nondup(u64vector *vec, uint64_t x)
 
 u64vector * mulvec(u64vector *avec, u64vector *bvec)
 {
-	int _ngg_tmp_1;
+	int _ngg_tmp_2;
 	uint64_t a;
 	u64vector *vec = (u64vector *) malloc(sizeof(u64vector));
 	if(vec == NULL) {
@@ -146,12 +170,12 @@ u64vector * mulvec(u64vector *avec, u64vector *bvec)
 
 	u64vector_construct(vec);
 
-	for(_ngg_tmp_1 = 0; _ngg_tmp_1 < u64vector_get_count(avec); _ngg_tmp_1 += 1) {
-		int _ngg_tmp_2;
+	for(_ngg_tmp_2 = 0; _ngg_tmp_2 < u64vector_get_count(avec); _ngg_tmp_2 += 1) {
+		int _ngg_tmp_3;
 		uint64_t b;
-		a = u64vector_get_item(avec, _ngg_tmp_1);
-		for(_ngg_tmp_2 = 0; _ngg_tmp_2 < u64vector_get_count(bvec); _ngg_tmp_2 += 1) {
-			b = u64vector_get_item(bvec, _ngg_tmp_2);
+		a = u64vector_get_item(avec, _ngg_tmp_2);
+		for(_ngg_tmp_3 = 0; _ngg_tmp_3 < u64vector_get_count(bvec); _ngg_tmp_3 += 1) {
+			b = u64vector_get_item(bvec, _ngg_tmp_3);
 			append_nondup(vec, a * b);
 		}
 	}
@@ -164,12 +188,12 @@ u64vector * mulvec(u64vector *avec, u64vector *bvec)
 
 void printvec(const char * lbl, u64vector *vec)
 {
-	int _ngg_tmp_3;
+	int _ngg_tmp_4;
 	uint64_t x;
 	printf("%s = { ", lbl);
 
-	for(_ngg_tmp_3 = 0; _ngg_tmp_3 < u64vector_get_count(vec); _ngg_tmp_3 += 1) {
-		x = u64vector_get_item(vec, _ngg_tmp_3);
+	for(_ngg_tmp_4 = 0; _ngg_tmp_4 < u64vector_get_count(vec); _ngg_tmp_4 += 1) {
+		x = u64vector_get_item(vec, _ngg_tmp_4);
 		printf("%zu, ", x);
 	}
 
@@ -183,22 +207,29 @@ _Bool isoptimal(tnum P, tnum Q)
 	u64vector *gamma_linprod = getgamma(linprod);
 	u64vector *gamma_P = getgamma(P);
 	u64vector *gamma_Q = getgamma(Q);
-	u64vector *optprodvec = mulvec(gamma_P, gamma_Q);
+	u64vector *exactprods = mulvec(gamma_P, gamma_Q);
+	tnum optprod = getalpha(exactprods);
+
+	u64vector *gamma_optprod = getgamma(optprod);
 
 	print_tnum("P", P);
 	print_tnum("Q", Q);
 	print_tnum("linprod", linprod);
+	print_tnum("optprod", optprod);
 
 	printf("count(gamma_linprod) = %d\n", u64vector_get_count(gamma_linprod));
 	printf("count(gamma_P) = %d\n", u64vector_get_count(gamma_P));
 	printf("count(gamma_Q) = %d\n", u64vector_get_count(gamma_Q));
-	printf("count(optprodvec) = %d\n", u64vector_get_count(optprodvec));
+	printf("count(exactprods) = %d\n", u64vector_get_count(exactprods));
+	printf("count(gamma_optprod) = %d\n", u64vector_get_count(gamma_optprod));
 
-	assert(!(u64vector_get_count(gamma_linprod) < u64vector_get_count(optprodvec))); /* main.ngg:97 */
+	assert(!(u64vector_get_count(gamma_linprod) < u64vector_get_count(exactprods))); /* main.ngg:125 */
+
+	assert(u64vector_get_count(gamma_optprod) <= u64vector_get_count(gamma_linprod)); /* main.ngg:128 */
 
 	_Bool optimal = true;
 
-	if(u64vector_get_count(gamma_linprod) > u64vector_get_count(optprodvec)) {
+	if(tnums_differ(linprod, optprod)) {
 		optimal = false;
 		puts("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Suboptimal!");
 	}
@@ -220,9 +251,14 @@ _Bool isoptimal(tnum P, tnum Q)
 		free(gamma_Q);
 	}
 
-	if(optprodvec) {
-		u64vector_destruct(optprodvec);
-		free(optprodvec);
+	if(exactprods) {
+		u64vector_destruct(exactprods);
+		free(exactprods);
+	}
+
+	if(gamma_optprod) {
+		u64vector_destruct(gamma_optprod);
+		free(gamma_optprod);
 	}
 
 	return optimal;
@@ -230,13 +266,13 @@ _Bool isoptimal(tnum P, tnum Q)
 
 int main(int argc, char * *argv)
 {
-	size_t _ngg_tmp_4;
+	size_t _ngg_tmp_5;
 	int bits;
 	int BITS[4] = {1, 2, 4, 8};
 
-	for(_ngg_tmp_4 = 0u; _ngg_tmp_4 < (sizeof BITS / sizeof BITS[0]); _ngg_tmp_4 += (1u)) {
+	for(_ngg_tmp_5 = 0u; _ngg_tmp_5 < (sizeof BITS / sizeof BITS[0]); _ngg_tmp_5 += (1u)) {
 		size_t xm;
-		bits = BITS[_ngg_tmp_4];
+		bits = BITS[_ngg_tmp_5];
 		unsigned int maxnum = (unsigned int) (pow(2, bits) - 1);
 		_Bool optimal_for_bits = true;
 
@@ -265,7 +301,7 @@ int main(int argc, char * *argv)
 			}
 		}
 
-		printf("optimal for %d bits = %d\n", bits, optimal_for_bits);
+		printf("optimal for %d bit(s) = %d\n", bits, optimal_for_bits);
 	}
 
 	return 0;

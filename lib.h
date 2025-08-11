@@ -18,3 +18,4 @@ struct tnum tnum_mul(struct tnum a, struct tnum b);
 _Bool wellformed(struct tnum x);
 _Bool ingamma(u64 x, struct tnum T);
 void print_tnum(char *lbl, struct tnum x);
+_Bool tnums_differ(struct tnum x, struct tnum y);
