@@ -186,14 +186,40 @@ u64vector * mulvec(u64vector *avec, u64vector *bvec)
 	return _tmp_1;
 }
 
-void printvec(const char * lbl, u64vector *vec)
+_Bool left_subset_of_right(u64vector *l, u64vector *r)
 {
 	int _ngg_tmp_5;
+	uint64_t li;
+	for(_ngg_tmp_5 = 0; _ngg_tmp_5 < u64vector_get_count(l); _ngg_tmp_5 += 1) {
+		int _ngg_tmp_6;
+		uint64_t ri;
+		li = u64vector_get_item(l, _ngg_tmp_5);
+		_Bool found = false;
+
+		for(_ngg_tmp_6 = 0; _ngg_tmp_6 < u64vector_get_count(r); _ngg_tmp_6 += 1) {
+			ri = u64vector_get_item(r, _ngg_tmp_6);
+			if(li == ri) {
+				found = true;
+				break;
+			}
+		}
+
+		if(!found) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void printvec(const char * lbl, u64vector *vec)
+{
+	int _ngg_tmp_7;
 	uint64_t x;
 	printf("%s = { ", lbl);
 
-	for(_ngg_tmp_5 = 0; _ngg_tmp_5 < u64vector_get_count(vec); _ngg_tmp_5 += 1) {
-		x = u64vector_get_item(vec, _ngg_tmp_5);
+	for(_ngg_tmp_7 = 0; _ngg_tmp_7 < u64vector_get_count(vec); _ngg_tmp_7 += 1) {
+		x = u64vector_get_item(vec, _ngg_tmp_7);
 		printf("%zu, ", x);
 	}
 
@@ -234,9 +260,11 @@ _ngg_tuple_isoptimal isoptimal(tnum P, tnum Q)
 	printvec("exactprods", exactprods);
 	printvec("gamma_optprod", gamma_optprod);
 
-	assert(!(u64vector_get_count(gamma_myprod) < u64vector_get_count(exactprods))); /* main.ngg:133 */
+	assert(!(u64vector_get_count(gamma_myprod) < u64vector_get_count(exactprods))); /* main.ngg:151 */
 
-	assert(u64vector_get_count(gamma_optprod) <= u64vector_get_count(gamma_myprod)); /* main.ngg:136 */
+	assert(u64vector_get_count(gamma_optprod) <= u64vector_get_count(gamma_myprod)); /* main.ngg:154 */
+
+	assert(left_subset_of_right(exactprods, gamma_myprod)); /* main.ngg:157 */
 
 	_Bool optimal = true;
 
@@ -290,7 +318,7 @@ _ngg_tuple_isoptimal isoptimal(tnum P, tnum Q)
 
 int main(int argc, char * *argv)
 {
-	size_t _ngg_tmp_6;
+	size_t _ngg_tmp_8;
 	int bits;
 	int BITS[1] = {4};
 
@@ -298,9 +326,9 @@ int main(int argc, char * *argv)
 	int samecount = bettercount;
 	int worsecount = bettercount;
 
-	for(_ngg_tmp_6 = 0u; _ngg_tmp_6 < (sizeof BITS / sizeof BITS[0]); _ngg_tmp_6 += (1u)) {
+	for(_ngg_tmp_8 = 0u; _ngg_tmp_8 < (sizeof BITS / sizeof BITS[0]); _ngg_tmp_8 += (1u)) {
 		size_t xm;
-		bits = BITS[_ngg_tmp_6];
+		bits = BITS[_ngg_tmp_8];
 		unsigned int maxnum = (unsigned int) (pow(2, bits) - 1);
 		_Bool optimal_for_bits = true;
 

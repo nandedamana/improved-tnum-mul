@@ -78,6 +78,24 @@ fun mulvec gives u64vector takes avec, bvec u64vector
 	return steal vec
 ;
 
+fun left_subset_of_right gives bool takes l, r u64vector
+	for li in l
+		var found / false
+
+		for ri in r
+			if eq li ri
+				==found true
+				break
+			;
+		;
+
+		if not found
+			return false;;
+	;
+
+	return true
+;
+
 fun printvec takes lbl string, vec u64vector
 	=printf/["%s = { ", lbl]
 
@@ -136,6 +154,7 @@ fun isoptimal gives (bool, MineVsKernel) takes P, Q tnum
 	assert le =get-count\gamma_optprod =get-count\gamma_myprod
 
 	// TODO check correctness by checking elements
+	assert =left_subset_of_right/[exactprods, gamma_myprod]
 
 	var optimal / true
 
