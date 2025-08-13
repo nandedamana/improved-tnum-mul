@@ -57,8 +57,8 @@ struct tnum my_tnum_mul_proto(struct tnum a, struct tnum b)
 		/* LSB of tnum a is uncertain */
 		else if (a.mask & 1) {
 			u64 msk = b.value | b.mask;
-			struct tnum partprod = TNUM(b.value & ~msk, msk);
-			acc = tnum_add(acc, partprod);
+			struct tnum iterprod = TNUM(b.value & ~msk, msk);
+			acc = tnum_add(acc, iterprod);
 		}
 		/* Note: no case for LSB is certain 0 */
 		a = tnum_rshift(a, 1);
@@ -92,8 +92,8 @@ struct tnum my_tnum_mul(struct tnum a, struct tnum b)
 
 			// Assume a.value[i] is 1
 			u64 msk = b.value | b.mask;
-			struct tnum partprod = TNUM(b.value & ~msk, msk);
-			acc_1 = tnum_add(acc, partprod);
+			struct tnum iterprod = TNUM(b.value & ~msk, msk);
+			acc_1 = tnum_add(acc, iterprod);
 
 			//acc = tnum_union(acc_0, acc_1);
 			acc = tnum_union(acc, acc_1);
@@ -133,9 +133,9 @@ struct tnum my_tnum_mul(struct tnum a, struct tnum b)
 			/* If LSB(a) is 0, acc = acc + 0 * b = acc; no calculations needed. */
 
 			/* In case LSB(a) is 1 */
-			u64 partmask = b.value | b.mask;
-			struct tnum partprod = TNUM(b.value & ~partmask, partmask);
-			struct tnum acc_1 = tnum_add(acc, partprod);
+			u64 itermask = b.value | b.mask;
+			struct tnum iterprod = TNUM(b.value & ~itermask, itermask);
+			struct tnum acc_1 = tnum_add(acc, iterprod);
 
 			acc = tnum_union(acc, acc_1);
 		}
@@ -169,8 +169,8 @@ struct tnum my_tnum_mul_decompose(struct tnum a, struct tnum b)
 
 			// Assume a.value[i] is 1
 			u64 msk = b.value | b.mask;
-			struct tnum partprod = TNUM(0, msk);
-			acc_m_1 = tnum_add(acc_m, partprod);
+			struct tnum iterprod = TNUM(0, msk);
+			acc_m_1 = tnum_add(acc_m, iterprod);
 
 			acc_m = tnum_union(acc_m_0, acc_m_1);
 		}
