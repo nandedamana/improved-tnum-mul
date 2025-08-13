@@ -79,19 +79,22 @@ struct tnum my_tnum_mul(struct tnum a, struct tnum b)
 		/* LSB of tnum a is uncertain */
 		else if (a.mask & 1) {
 			// a.value[i] could be 0 or 1
-			struct tnum acc_0, acc_1;
+			//struct tnum acc_0, acc_1; // accumulator for 0 and 1
+			struct tnum acc_1; // accumulator when a.value[i] = 1
 
 			// This approach considers mu's to be either zero or one altogether, solving the challenge pointed out by Harishankar et al. (see the last example in their paper -- 11 * x1)
 
 			// Assume a.value[i] is 0
-			acc_0 = tnum_add(acc, TNUM(0, 0)); // TODO simplify?
+			//acc_0 = tnum_add(acc, TNUM(0, 0)); // Unoptimized
+			//acc_0 = acc; // optimized (but this can be avoided altogether)
 
 			// Assume a.value[i] is 1
 			u64 msk = b.value | b.mask;
 			struct tnum partprod = TNUM(b.value & ~msk, msk);
 			acc_1 = tnum_add(acc, partprod);
 
-			acc = tnum_union(acc_0, acc_1);
+			//acc = tnum_union(acc_0, acc_1);
+			acc = tnum_union(acc, acc_1);
 		}
 		/* Note: no case for LSB is certain 0 */
 		a = tnum_rshift(a, 1);
