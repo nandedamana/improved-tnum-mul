@@ -68,6 +68,8 @@ struct tnum my_tnum_mul_proto(struct tnum a, struct tnum b)
 }
 
 // No value-mask decomposition unlike Harishankar et al.
+// Contains explanation for simplification
+#if 0
 struct tnum my_tnum_mul(struct tnum a, struct tnum b)
 {
 	struct tnum acc = TNUM(0, 0);
@@ -94,6 +96,47 @@ struct tnum my_tnum_mul(struct tnum a, struct tnum b)
 			acc_1 = tnum_add(acc, partprod);
 
 			//acc = tnum_union(acc_0, acc_1);
+			acc = tnum_union(acc, acc_1);
+		}
+		/* Note: no case for LSB is certain 0 */
+		a = tnum_rshift(a, 1);
+		b = tnum_lshift(b, 1);
+	}
+	return acc;
+}
+#endif
+
+// No value-mask decomposition unlike Harishankar et al.
+/* A comment inside refers to a paper by Harishankar et al.:
+ * https://arxiv.org/abs/2105.05398
+ */
+struct tnum my_tnum_mul(struct tnum a, struct tnum b)
+{
+	struct tnum acc = TNUM(0, 0);
+
+	while (a.value || a.mask) {
+		/* LSB of tnum a is a certain 1 */
+		if (a.value & 1) {
+			acc = tnum_add(acc, b);
+		}
+		/* LSB of tnum a is uncertain */
+		else if (a.mask & 1) {
+			/* Simply multiplying b with LSB(a)'s uncertainty results in decreased
+			 * precision, as explained in an open question ("How can we incorporate
+			 * correlation in unknown bits across partial products?") left by
+			 * Harishankar et al. However, we know for sure that LSB(a) is either
+			 * 0 or 1, from which we could find two possible partial products and
+			 * take a union. This improves the precision in a significant number of
+			 * cases.
+			 */
+
+			/* If LSB(a) is 0, acc = acc + 0 * b = acc; no calculations needed. */
+
+			/* In case LSB(a) is 1 */
+			u64 partmask = b.value | b.mask;
+			struct tnum partprod = TNUM(b.value & ~partmask, partmask);
+			struct tnum acc_1 = tnum_add(acc, partprod);
+
 			acc = tnum_union(acc, acc_1);
 		}
 		/* Note: no case for LSB is certain 0 */
