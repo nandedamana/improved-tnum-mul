@@ -107,14 +107,14 @@ tnum tnum_union(tnum t1, tnum t2)
 
 tnum getalpha(u64vector *xs)
 {
-	int _ngg_tmp_0;
+	int _ngg_tmp_1;
 	uint64_t x;
 	assert(u64vector_get_count(xs) > 0); /* main.ngg:35 */
 
 	tnum T = TNUM(u64vector_get_item(xs, 0), 0);
 
-	for(_ngg_tmp_0 = 0; _ngg_tmp_0 < u64vector_get_count(xs); _ngg_tmp_0 += 1) {
-		x = u64vector_get_item(xs, _ngg_tmp_0);
+	for(_ngg_tmp_1 = 0; _ngg_tmp_1 < u64vector_get_count(xs); _ngg_tmp_1 += 1) {
+		x = u64vector_get_item(xs, _ngg_tmp_1);
 		T = tnum_union(T, TNUM(x, 0));
 	}
 
@@ -146,10 +146,10 @@ u64vector * getgamma(tnum T)
 
 void append_nondup(u64vector *vec, uint64_t x)
 {
-	int _ngg_tmp_1;
+	int _ngg_tmp_2;
 	uint64_t y;
-	for(_ngg_tmp_1 = 0; _ngg_tmp_1 < u64vector_get_count(vec); _ngg_tmp_1 += 1) {
-		y = u64vector_get_item(vec, _ngg_tmp_1);
+	for(_ngg_tmp_2 = 0; _ngg_tmp_2 < u64vector_get_count(vec); _ngg_tmp_2 += 1) {
+		y = u64vector_get_item(vec, _ngg_tmp_2);
 		if(y == x) {
 			return;
 		}
@@ -160,7 +160,7 @@ void append_nondup(u64vector *vec, uint64_t x)
 
 u64vector * mulvec(u64vector *avec, u64vector *bvec)
 {
-	int _ngg_tmp_2;
+	int _ngg_tmp_3;
 	uint64_t a;
 	u64vector *vec = (u64vector *) malloc(sizeof(u64vector));
 	if(vec == NULL) {
@@ -170,12 +170,12 @@ u64vector * mulvec(u64vector *avec, u64vector *bvec)
 
 	u64vector_construct(vec);
 
-	for(_ngg_tmp_2 = 0; _ngg_tmp_2 < u64vector_get_count(avec); _ngg_tmp_2 += 1) {
-		int _ngg_tmp_3;
+	for(_ngg_tmp_3 = 0; _ngg_tmp_3 < u64vector_get_count(avec); _ngg_tmp_3 += 1) {
+		int _ngg_tmp_4;
 		uint64_t b;
-		a = u64vector_get_item(avec, _ngg_tmp_2);
-		for(_ngg_tmp_3 = 0; _ngg_tmp_3 < u64vector_get_count(bvec); _ngg_tmp_3 += 1) {
-			b = u64vector_get_item(bvec, _ngg_tmp_3);
+		a = u64vector_get_item(avec, _ngg_tmp_3);
+		for(_ngg_tmp_4 = 0; _ngg_tmp_4 < u64vector_get_count(bvec); _ngg_tmp_4 += 1) {
+			b = u64vector_get_item(bvec, _ngg_tmp_4);
 			append_nondup(vec, a * b);
 		}
 	}
@@ -188,19 +188,19 @@ u64vector * mulvec(u64vector *avec, u64vector *bvec)
 
 void printvec(const char * lbl, u64vector *vec)
 {
-	int _ngg_tmp_4;
+	int _ngg_tmp_5;
 	uint64_t x;
 	printf("%s = { ", lbl);
 
-	for(_ngg_tmp_4 = 0; _ngg_tmp_4 < u64vector_get_count(vec); _ngg_tmp_4 += 1) {
-		x = u64vector_get_item(vec, _ngg_tmp_4);
+	for(_ngg_tmp_5 = 0; _ngg_tmp_5 < u64vector_get_count(vec); _ngg_tmp_5 += 1) {
+		x = u64vector_get_item(vec, _ngg_tmp_5);
 		printf("%zu, ", x);
 	}
 
 	puts(" }");
 }
 
-_Bool isoptimal(tnum P, tnum Q)
+_ngg_tuple_isoptimal isoptimal(tnum P, tnum Q)
 {
 	tnum linprod = tnum_mul(P, Q);
 	tnum myprod = my_tnum_mul(P, Q);
@@ -234,11 +234,9 @@ _Bool isoptimal(tnum P, tnum Q)
 	printvec("exactprods", exactprods);
 	printvec("gamma_optprod", gamma_optprod);
 
-	assert(!(u64vector_get_count(gamma_myprod) < u64vector_get_count(exactprods))); /* main.ngg:129 */
+	assert(!(u64vector_get_count(gamma_myprod) < u64vector_get_count(exactprods))); /* main.ngg:133 */
 
-	assert(u64vector_get_count(gamma_myprod) <= u64vector_get_count(gamma_linprod)); /* main.ngg:131 */
-
-	assert(u64vector_get_count(gamma_optprod) <= u64vector_get_count(gamma_myprod)); /* main.ngg:134 */
+	assert(u64vector_get_count(gamma_optprod) <= u64vector_get_count(gamma_myprod)); /* main.ngg:136 */
 
 	_Bool optimal = true;
 
@@ -248,6 +246,14 @@ _Bool isoptimal(tnum P, tnum Q)
 	}
 
 	puts("");
+
+	MineVsKernel mine_vs_kernel = MINE_VS_KERNEL_WORSE;
+
+	if(u64vector_get_count(gamma_myprod) < u64vector_get_count(gamma_linprod)) {
+		mine_vs_kernel = MINE_VS_KERNEL_BETTER;
+	} else if(u64vector_get_count(gamma_myprod) == u64vector_get_count(gamma_linprod)) {
+		mine_vs_kernel = MINE_VS_KERNEL_SAME;
+	}
 
 	if(gamma_linprod) {
 		u64vector_destruct(gamma_linprod);
@@ -279,18 +285,22 @@ _Bool isoptimal(tnum P, tnum Q)
 		free(gamma_optprod);
 	}
 
-	return optimal;
+	return (_ngg_tuple_isoptimal){optimal, mine_vs_kernel};
 }
 
 int main(int argc, char * *argv)
 {
-	size_t _ngg_tmp_5;
+	size_t _ngg_tmp_6;
 	int bits;
-	int BITS[4] = {1, 2, 4, 8};
+	int BITS[1] = {4};
 
-	for(_ngg_tmp_5 = 0u; _ngg_tmp_5 < (sizeof BITS / sizeof BITS[0]); _ngg_tmp_5 += (1u)) {
+	int bettercount = 0;
+	int samecount = bettercount;
+	int worsecount = bettercount;
+
+	for(_ngg_tmp_6 = 0u; _ngg_tmp_6 < (sizeof BITS / sizeof BITS[0]); _ngg_tmp_6 += (1u)) {
 		size_t xm;
-		bits = BITS[_ngg_tmp_5];
+		bits = BITS[_ngg_tmp_6];
 		unsigned int maxnum = (unsigned int) (pow(2, bits) - 1);
 		_Bool optimal_for_bits = true;
 
@@ -311,8 +321,29 @@ int main(int argc, char * *argv)
 							continue;
 						}
 
-						if(!isoptimal(x, y)) {
+						_ngg_tuple_isoptimal _ngg_tmp_0 = isoptimal(x, y);
+						MineVsKernel mine_vs_kernel = _ngg_tmp_0.m1;
+						_Bool optimal = _ngg_tmp_0.m0;
+						if(!optimal) {
 							optimal_for_bits = false;
+						}
+
+						switch(mine_vs_kernel) {
+						case MINE_VS_KERNEL_BETTER:
+						{
+							bettercount += 1;
+							break;
+						}
+						case MINE_VS_KERNEL_SAME:
+						{
+							samecount += 1;
+							break;
+						}
+						case MINE_VS_KERNEL_WORSE:
+						{
+							worsecount += 1;
+							break;
+						}
 						}
 					}
 				}
@@ -320,7 +351,19 @@ int main(int argc, char * *argv)
 		}
 
 		printf("optimal for %d bit(s) = %d\n", bits, optimal_for_bits);
+		puts("Mine vs kernel: ");
+		printf("  better = %d\n", bettercount);
+		printf("  same   = %d\n", samecount);
+		printf("  worse  = %d\n", worsecount);
 	}
 
 	return 0;
+}
+
+_ngg_tuple_isoptimal _ngg_tuple_isoptimal_default()
+{
+	_ngg_tuple_isoptimal s;
+	s.m0 = false;
+	s.m1 = MINE_VS_KERNEL_BETTER;
+	return s;
 }

@@ -1,4 +1,6 @@
 typedef struct u64vector u64vector;
+typedef enum MineVsKernel MineVsKernel;
+typedef struct _ngg_tuple_isoptimal _ngg_tuple_isoptimal;
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -11,6 +13,17 @@ struct u64vector {
 	uint64_t *arr;
 	int alloccount;
 	int count;
+};
+
+enum MineVsKernel {
+	MINE_VS_KERNEL_BETTER,
+	MINE_VS_KERNEL_SAME,
+	MINE_VS_KERNEL_WORSE,
+};
+
+struct _ngg_tuple_isoptimal {
+	_Bool m0;
+	MineVsKernel m1;
 };
 
 void u64vector__resize(u64vector *this, int newcount);
@@ -29,5 +42,6 @@ u64vector * getgamma(tnum T);
 void append_nondup(u64vector *vec, uint64_t x);
 u64vector * mulvec(u64vector *avec, u64vector *bvec);
 void printvec(const char * lbl, u64vector *vec);
-_Bool isoptimal(tnum P, tnum Q);
+_ngg_tuple_isoptimal isoptimal(tnum P, tnum Q);
 int main(int argc, char * *argv);
+_ngg_tuple_isoptimal _ngg_tuple_isoptimal_default();
