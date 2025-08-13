@@ -12,6 +12,7 @@ shadow of tnum struct tnum
 	value u64; mask u64;;
 shadow fun TNUM gives tnum takes v, m u64;
 shadow fun tnum_mul gives tnum takes a, b tnum;
+shadow fun my_tnum_mul gives tnum takes a, b tnum;
 shadow fun wellformed gives bool takes x tnum;
 shadow fun ingamma gives bool takes x u64, T tnum;
 shadow fun print_tnum takes lbl string, x tnum;
@@ -89,8 +90,10 @@ fun printvec takes lbl string, vec u64vector
 // Returns false if suboptimal
 fun isoptimal gives bool takes P, Q tnum
 	var linprod tnum / =tnum_mul/[P, Q]
+	var myprod tnum / =my_tnum_mul/[P, Q]
 
 	local gamma_linprod / =getgamma/[linprod]
+	local gamma_myprod / =getgamma/[myprod]
 	local gamma_P / =getgamma/[P]
 	local gamma_Q / =getgamma/[Q]
 	local exactprods / =mulvec/[gamma_P, gamma_Q]
@@ -102,34 +105,39 @@ fun isoptimal gives bool takes P, Q tnum
 	=print_tnum/["P", P]
 	=print_tnum/["Q", Q]
 	=print_tnum/["linprod", linprod]
+	=print_tnum/["myprod", myprod]
 	=print_tnum/["optprod", optprod]
 
 	=printf/['count(gamma_linprod) = %d\n', =get-count\gamma_linprod]
+	=printf/['count(gamma_myprod) = %d\n', =get-count\gamma_myprod]
 	=printf/['count(gamma_P) = %d\n', =get-count\gamma_P]
 	=printf/['count(gamma_Q) = %d\n', =get-count\gamma_Q]
 	=printf/['count(exactprods) = %d\n', =get-count\exactprods]
 	=printf/['count(gamma_optprod) = %d\n', =get-count\gamma_optprod]
 
-	/*
 	=printvec/["gamma_linprod", gamma_linprod]
+	=printvec/["gamma_myprod", gamma_myprod]
 	=printvec/["gamma_P", gamma_P]
 	=printvec/["gamma_Q", gamma_Q]
 	=printvec/["exactprods", exactprods]
 	=printvec/["gamma_optprod", gamma_optprod]
-	*/
 
-	// count(gamma_linprod) < count(exactprods) means tnum_mul() is unsound.
-	// NOTE: ASSERT1: This could fail even if tnum_mul() is sound if MAX_U64
+	// count(gamma_myprod) < count(exactprods) means my_tnum_mul() is unsound.
+	// NOTE: ASSERT1: This could fail even if my_tnum_mul() is sound if MAX_U64
 	// is too high to the point that the truncation due to gamma(abstract_prod)
 	// results in a smaller set.
-	assert not lt =get-count\gamma_linprod =get-count\exactprods
+	assert not lt =get-count\gamma_myprod =get-count\exactprods
+
+	assert le =get-count\gamma_myprod =get-count\gamma_linprod
 
 	// If fails, either getalpha() or tnum_union() is incorrect
-	assert le =get-count\gamma_optprod =get-count\gamma_linprod
+	assert le =get-count\gamma_optprod =get-count\gamma_myprod
+
+	// TODO check correctness by checking elements
 
 	var optimal / true
 
-	if =tnums_differ/[linprod, optprod]
+	if =tnums_differ/[myprod, optprod]
 		==optimal false
 		=puts/['^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Suboptimal!']
 	;

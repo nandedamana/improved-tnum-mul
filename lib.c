@@ -43,6 +43,61 @@ struct tnum tnum_mul(struct tnum a, struct tnum b)
 	return tnum_add(TNUM(acc_v, 0), acc_m);
 }
 
+// TODO make sure this is correct
+struct tnum my_tnum_mul_proto(struct tnum a, struct tnum b)
+{
+	struct tnum acc = TNUM(0, 0);
+
+	while (a.value || a.mask) {
+		/* LSB of tnum a is a certain 1 */
+		if (a.value & 1)
+			acc = tnum_add(acc, b);
+		/* LSB of tnum a is uncertain */
+		else if (a.mask & 1) {
+			u64 msk = b.value | b.mask;
+			struct tnum partprod = TNUM(b.value & ~msk, msk);
+			acc = tnum_add(acc, partprod);
+		}
+		/* Note: no case for LSB is certain 0 */
+		a = tnum_rshift(a, 1);
+		b = tnum_lshift(b, 1);
+	}
+	return acc;
+}
+
+// TODO use value-mask decomposition like Harishankar et al. did for better precision
+struct tnum my_tnum_mul(struct tnum a, struct tnum b)
+{
+	struct tnum acc = TNUM(0, 0);
+
+	while (a.value || a.mask) {
+		/* LSB of tnum a is a certain 1 */
+		if (a.value & 1)
+			acc = tnum_add(acc, b);
+		/* LSB of tnum a is uncertain */
+		else if (a.mask & 1) {
+			// a.value[i] could be 0 or 1
+			struct tnum acc_m_0, acc_m_1;
+
+			// This approach considers mu's to be either zero or one altogether, solving the challenge pointed out by Harishankar et al. (see the last example in their paper -- 11 * x1)
+
+			// Assume a.value[i] is 0
+			acc_m_0 = tnum_add(acc, TNUM(0, 0)); // TODO simplify?
+
+			// Assume a.value[i] is 1
+			u64 msk = b.value | b.mask;
+			struct tnum partprod = TNUM(b.value & ~msk, msk);
+			acc_m_1 = tnum_add(acc, partprod);
+
+			acc = tnum_union(acc_m_0, acc_m_1);
+		}
+		/* Note: no case for LSB is certain 0 */
+		a = tnum_rshift(a, 1);
+		b = tnum_lshift(b, 1);
+	}
+	return acc;
+}
+
 // END from linux
 
 _Bool wellformed(struct tnum x)

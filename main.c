@@ -109,7 +109,7 @@ tnum getalpha(u64vector *xs)
 {
 	int _ngg_tmp_0;
 	uint64_t x;
-	assert(u64vector_get_count(xs) > 0); /* main.ngg:34 */
+	assert(u64vector_get_count(xs) > 0); /* main.ngg:35 */
 
 	tnum T = TNUM(u64vector_get_item(xs, 0), 0);
 
@@ -203,8 +203,10 @@ void printvec(const char * lbl, u64vector *vec)
 _Bool isoptimal(tnum P, tnum Q)
 {
 	tnum linprod = tnum_mul(P, Q);
+	tnum myprod = my_tnum_mul(P, Q);
 
 	u64vector *gamma_linprod = getgamma(linprod);
+	u64vector *gamma_myprod = getgamma(myprod);
 	u64vector *gamma_P = getgamma(P);
 	u64vector *gamma_Q = getgamma(Q);
 	u64vector *exactprods = mulvec(gamma_P, gamma_Q);
@@ -215,21 +217,32 @@ _Bool isoptimal(tnum P, tnum Q)
 	print_tnum("P", P);
 	print_tnum("Q", Q);
 	print_tnum("linprod", linprod);
+	print_tnum("myprod", myprod);
 	print_tnum("optprod", optprod);
 
 	printf("count(gamma_linprod) = %d\n", u64vector_get_count(gamma_linprod));
+	printf("count(gamma_myprod) = %d\n", u64vector_get_count(gamma_myprod));
 	printf("count(gamma_P) = %d\n", u64vector_get_count(gamma_P));
 	printf("count(gamma_Q) = %d\n", u64vector_get_count(gamma_Q));
 	printf("count(exactprods) = %d\n", u64vector_get_count(exactprods));
 	printf("count(gamma_optprod) = %d\n", u64vector_get_count(gamma_optprod));
 
-	assert(!(u64vector_get_count(gamma_linprod) < u64vector_get_count(exactprods))); /* main.ngg:125 */
+	printvec("gamma_linprod", gamma_linprod);
+	printvec("gamma_myprod", gamma_myprod);
+	printvec("gamma_P", gamma_P);
+	printvec("gamma_Q", gamma_Q);
+	printvec("exactprods", exactprods);
+	printvec("gamma_optprod", gamma_optprod);
 
-	assert(u64vector_get_count(gamma_optprod) <= u64vector_get_count(gamma_linprod)); /* main.ngg:128 */
+	assert(!(u64vector_get_count(gamma_myprod) < u64vector_get_count(exactprods))); /* main.ngg:129 */
+
+	assert(u64vector_get_count(gamma_myprod) <= u64vector_get_count(gamma_linprod)); /* main.ngg:131 */
+
+	assert(u64vector_get_count(gamma_optprod) <= u64vector_get_count(gamma_myprod)); /* main.ngg:134 */
 
 	_Bool optimal = true;
 
-	if(tnums_differ(linprod, optprod)) {
+	if(tnums_differ(myprod, optprod)) {
 		optimal = false;
 		puts("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Suboptimal!");
 	}
@@ -239,6 +252,11 @@ _Bool isoptimal(tnum P, tnum Q)
 	if(gamma_linprod) {
 		u64vector_destruct(gamma_linprod);
 		free(gamma_linprod);
+	}
+
+	if(gamma_myprod) {
+		u64vector_destruct(gamma_myprod);
+		free(gamma_myprod);
 	}
 
 	if(gamma_P) {

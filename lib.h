@@ -13,8 +13,10 @@ struct tnum {
 };
 
 struct tnum tnum_lshift(struct tnum a, u8 shift);
-struct tnum tnum_rshift(struct tnum a, u8 shift);
 struct tnum tnum_mul(struct tnum a, struct tnum b);
+struct tnum tnum_rshift(struct tnum a, u8 shift);
+struct tnum tnum_union(struct tnum t1, struct tnum t2);
+struct tnum my_tnum_mul(struct tnum a, struct tnum b);
 _Bool wellformed(struct tnum x);
 _Bool ingamma(u64 x, struct tnum T);
 void print_tnum(char *lbl, struct tnum x);
