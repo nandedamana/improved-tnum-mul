@@ -188,6 +188,7 @@ fun $main
 		var optimal_for_bits / true
 
 		// Generate all possible well-formed abstract pairs (P, Q) within the range
+		v #pragma omp parallel for
 		for xm from 0u upto maxnum
 			for xv from 0u upto maxnum
 				var x / =TNUM/[xv, xm]

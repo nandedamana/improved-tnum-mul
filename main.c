@@ -332,6 +332,7 @@ int main(int argc, char * *argv)
 		unsigned int maxnum = (unsigned int) (pow(2, bits) - 1);
 		_Bool optimal_for_bits = true;
 
+		#pragma omp parallel for
 		for(xm = 0u; xm <= maxnum; xm += 1) {
 			size_t xv;
 			for(xv = 0u; xv <= maxnum; xv += 1) {

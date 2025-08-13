@@ -1,7 +1,7 @@
 CSRC=main.c main.h lib.c lib.h
 
-experi: $(CSRC)
-	gcc -O2 -o experi $(CSRC) -lm
+experi-omp: $(CSRC)
+	gcc -O2 -o experi-omp -fopenmp $(CSRC) -lm
 
 main.h: main.c
 
