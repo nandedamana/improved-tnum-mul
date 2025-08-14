@@ -1,0 +1,15 @@
+This commit addresses a challenge explained in an open question ("How
+can we incorporate correlation in unknown bits across partial
+products?") left by Harishankar et al. in their paper:
+https://arxiv.org/abs/2105.05398
+
+When LSB(a) is uncertain, we know for sure that it is either 0 or 1,
+from which we could find two possible partial products and take a
+union. Experiment shows that applying this technique in long
+multiplication improves the precision in a significant number of cases
+(at the cost of losing precision in a relatively lower number of
+cases).
+
+This commit also removes the value-mask decomposition technique
+employed by Harishankar et al., as its direct incorporation did not
+result in any improvements for the new algorithm.

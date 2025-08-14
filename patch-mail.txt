@@ -1,0 +1,28 @@
+I'm submitting this patch to mainly get it tested against the kernel
+CI setup. It replaces the current tnum_mul with a simpler algorithm
+that employs a technique to address a challenge pointed out by the
+authors of the existing one. Brute-force testing at 8-bit indicates
+that the new code is sound and results in improved precision in
+general (unless I've made some stupid mistake in the test setup):
+
+New vs existing: 
+  better = 29604517 (cases where the new code results in improved precision)
+  same   = 11865241
+  worse  = 1576963
+
+The new algorithm achieves optimality in more cases. Results at 6 bit:
+  myprod optimal cases  = 418348 / 531440
+  linprod optimal cases = 202444 / 531440
+
+Although significantly lower, the new algorithm having less precision
+in some cases is a concern, as it can cause the verifier to reject
+some programs that are currently accepted. That's where thorough
+testing is needed. (There is one dirty technique to have the benefits
+of both algorithms: just run both and pick the result that is more
+precise; but let that be the last resort.)
+
+The new algorithm is still O(n), and a callgrind run shows that it
+generates slightly lesser number of instructions.
+
+I'm willing to share the brute-force setup, explanations, examples,
+etc. once it passes basic tests. Working on a formal proof as well.
