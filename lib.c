@@ -107,7 +107,10 @@ struct tnum my_tnum_mul(struct tnum a, struct tnum b)
 #endif
 
 // No value-mask decomposition unlike Harishankar et al.
-/* A comment inside refers to a paper by Harishankar et al.:
+/* Perform long multiplication, iterating through the trits in a. A small trick
+ * inside the loop finds two possible partial products and takes their union,
+ * improving the precision significantly.
+ * A comment inside refers to a paper by Harishankar et al.:
  * https://arxiv.org/abs/2105.05398
  */
 struct tnum my_tnum_mul(struct tnum a, struct tnum b)
