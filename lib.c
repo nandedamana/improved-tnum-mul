@@ -142,14 +142,11 @@ struct tnum my_tnum_mul(struct tnum a, struct tnum b)
 			 *
 			 * The first partial product (acc_0) is for the case LSB(a) = 0;
 			 * but acc_0 = acc + 0 * b = acc.
+			 * The second partial product (acc_1) is for the case LSB(a) = 1;
+			 * acc_1 = tnum_add(acc, b).
 			 */
 
-			/* In case LSB(a) is 1 */
-			u64 itermask = b.value | b.mask;
-			struct tnum iterprod = TNUM(b.value & ~itermask, itermask);
-			struct tnum acc_1 = tnum_add(acc, iterprod);
-
-			acc = tnum_union(acc, acc_1);
+			acc = tnum_union(acc, tnum_add(acc, b)); /* tnum_union(acc_0, acc_1) */
 		}
 		/* Note: no case for LSB is certain 0 */
 		a = tnum_rshift(a, 1);
