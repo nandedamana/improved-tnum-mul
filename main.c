@@ -97,19 +97,11 @@ void u64vector_construct(u64vector *this)
 	this->count = 0;
 }
 
-tnum tnum_union(tnum t1, tnum t2)
-{
-	uint64_t value = t1.value & t2.value;
-	uint64_t mask = ((t1.value ^ t2.value) | t1.mask) | t2.mask;
-
-	return TNUM(value & (~mask), mask);
-}
-
 tnum getalpha(u64vector *xs)
 {
 	int _ngg_tmp_1;
 	uint64_t x;
-	assert(u64vector_get_count(xs) > 0); /* main.ngg:35 */
+	assert(u64vector_get_count(xs) > 0); /* main.ngg:28 */
 
 	tnum T = TNUM(u64vector_get_item(xs, 0), 0);
 
@@ -260,11 +252,11 @@ _ngg_tuple_isoptimal isoptimal(tnum P, tnum Q)
 	printvec("exactprods", exactprods);
 	printvec("gamma_optprod", gamma_optprod);
 
-	assert(!(u64vector_get_count(gamma_myprod) < u64vector_get_count(exactprods))); /* main.ngg:151 */
+	assert(!(u64vector_get_count(gamma_myprod) < u64vector_get_count(exactprods))); /* main.ngg:144 */
 
-	assert(u64vector_get_count(gamma_optprod) <= u64vector_get_count(gamma_myprod)); /* main.ngg:154 */
+	assert(u64vector_get_count(gamma_optprod) <= u64vector_get_count(gamma_myprod)); /* main.ngg:147 */
 
-	assert(left_subset_of_right(exactprods, gamma_myprod)); /* main.ngg:157 */
+	assert(left_subset_of_right(exactprods, gamma_myprod)); /* main.ngg:150 */
 
 	_Bool optimal = true;
 

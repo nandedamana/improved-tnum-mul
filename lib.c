@@ -67,6 +67,14 @@ struct tnum my_tnum_mul_proto(struct tnum a, struct tnum b)
 	return acc;
 }
 
+struct tnum tnum_union(struct tnum t1, struct tnum t2)
+{
+	u64 v = t1.value & t2.value;
+	u64 mu = (t1.value ^ t2.value) | t1.mask | t2.mask;
+
+	return TNUM(v & ~mu, mu);
+}
+
 // No value-mask decomposition unlike Harishankar et al.
 // Contains explanation for simplification
 #if 0
