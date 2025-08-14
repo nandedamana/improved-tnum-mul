@@ -128,9 +128,10 @@ struct tnum my_tnum_mul(struct tnum a, struct tnum b)
 			 * 0 or 1, from which we could find two possible partial products and
 			 * take a union. This improves the precision in a significant number of
 			 * cases.
+			 *
+			 * The first partial product (acc_0) is for the case LSB(a) = 0;
+			 * but acc_0 = acc + 0 * b = acc.
 			 */
-
-			/* If LSB(a) is 0, acc = acc + 0 * b = acc; no calculations needed. */
 
 			/* In case LSB(a) is 1 */
 			u64 itermask = b.value | b.mask;
