@@ -102,8 +102,8 @@ enum MineVsKernel
 	BETTER, SAME, WORSE
 ;
 
-// Returns false if suboptimal
-fun isoptimal gives (bool, MineVsKernel) takes P, Q tnum
+// Returns myprod optimal, linprod optimal, precision comparison
+fun isoptimal gives (bool, bool, MineVsKernel) takes P, Q tnum
 	var linprod tnum / =tnum_mul/[P, Q]
 	var myprod tnum / =my_tnum_mul/[P, Q]
 
@@ -165,14 +165,15 @@ fun isoptimal gives (bool, MineVsKernel) takes P, Q tnum
 	elif eq =get-count\gamma_myprod =get-count\gamma_linprod
 		==mine-vs-kernel SAME\MineVsKernel;;
 
-	return optimal, mine-vs-kernel
+	return optimal, not =tnums_differ/[linprod, optprod], mine-vs-kernel
 ;
 
 fun $main
 	//var BITS / [1, 2, 4, 8]
 	var BITS / [4]
 
-	var bettercount, samecount, worsecount int
+	// TODO reset per bit?
+	var bettercount, samecount, worsecount, optimalcount, optimalcount_linux, totalcount int
 
 	// TODO tnums generated for testing n+1 bits is a superset of tnums generated
 	// for n bits; memoize or skip.
@@ -194,9 +195,16 @@ fun $main
 						if not =wellformed/[y]
 							continue;;
 
-						var (optimal, mine-vs-kernel) / =isoptimal/[x, y]
+						var (optimal, linoptimal, mine-vs-kernel) / =isoptimal/[x, y]
 						if not optimal
-							==optimal_for_bits false;;
+							==optimal_for_bits false
+						;
+
+						if optimal
+							sum= optimalcount 1;;
+
+						if linoptimal
+							sum= optimalcount_linux 1;;
 
 						switch mine-vs-kernel
 						case BETTER\MineVsKernel
@@ -205,6 +213,8 @@ fun $main
 							sum= samecount 1;;
 						case WORSE\MineVsKernel
 							sum= worsecount 1;;
+
+						sum= totalcount 1
 					;
 				;
 			;
@@ -215,6 +225,8 @@ fun $main
 		=printf/['  better = %d\n', bettercount]
 		=printf/['  same   = %d\n', samecount]
 		=printf/['  worse  = %d\n', worsecount]
+		=printf/['  myprod optimal cases  = %d / %d\n', optimalcount, totalcount]
+		=printf/['  linprod optimal cases = %d / %d\n', optimalcount_linux, totalcount]
 	;
 
 	return 0;

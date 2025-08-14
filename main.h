@@ -23,7 +23,8 @@ enum MineVsKernel {
 
 struct _ngg_tuple_isoptimal {
 	_Bool m0;
-	MineVsKernel m1;
+	_Bool m1;
+	MineVsKernel m2;
 };
 
 void u64vector__resize(u64vector *this, int newcount);

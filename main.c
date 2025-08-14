@@ -305,7 +305,7 @@ _ngg_tuple_isoptimal isoptimal(tnum P, tnum Q)
 		free(gamma_optprod);
 	}
 
-	return (_ngg_tuple_isoptimal){optimal, mine_vs_kernel};
+	return (_ngg_tuple_isoptimal){optimal, !tnums_differ(linprod, optprod), mine_vs_kernel};
 }
 
 int main(int argc, char * *argv)
@@ -317,6 +317,9 @@ int main(int argc, char * *argv)
 	int bettercount = 0;
 	int samecount = bettercount;
 	int worsecount = bettercount;
+	int optimalcount = bettercount;
+	int optimalcount_linux = bettercount;
+	int totalcount = bettercount;
 
 	for(_ngg_tmp_8 = 0u; _ngg_tmp_8 < (sizeof BITS / sizeof BITS[0]); _ngg_tmp_8 += (1u)) {
 		size_t xm;
@@ -343,10 +346,19 @@ int main(int argc, char * *argv)
 						}
 
 						_ngg_tuple_isoptimal _ngg_tmp_0 = isoptimal(x, y);
-						MineVsKernel mine_vs_kernel = _ngg_tmp_0.m1;
+						MineVsKernel mine_vs_kernel = _ngg_tmp_0.m2;
+						_Bool linoptimal = _ngg_tmp_0.m1;
 						_Bool optimal = _ngg_tmp_0.m0;
 						if(!optimal) {
 							optimal_for_bits = false;
+						}
+
+						if(optimal) {
+							optimalcount += 1;
+						}
+
+						if(linoptimal) {
+							optimalcount_linux += 1;
 						}
 
 						switch(mine_vs_kernel) {
@@ -366,6 +378,8 @@ int main(int argc, char * *argv)
 							break;
 						}
 						}
+
+						totalcount += 1;
 					}
 				}
 			}
@@ -376,6 +390,8 @@ int main(int argc, char * *argv)
 		printf("  better = %d\n", bettercount);
 		printf("  same   = %d\n", samecount);
 		printf("  worse  = %d\n", worsecount);
+		printf("  myprod optimal cases  = %d / %d\n", optimalcount, totalcount);
+		printf("  linprod optimal cases = %d / %d\n", optimalcount_linux, totalcount);
 	}
 
 	return 0;
@@ -385,6 +401,7 @@ _ngg_tuple_isoptimal _ngg_tuple_isoptimal_default()
 {
 	_ngg_tuple_isoptimal s;
 	s.m0 = false;
-	s.m1 = MINE_VS_KERNEL_BETTER;
+	s.m1 = false;
+	s.m2 = MINE_VS_KERNEL_BETTER;
 	return s;
 }
