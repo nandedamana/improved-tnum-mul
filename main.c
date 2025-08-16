@@ -9,15 +9,13 @@ uint64_t MAX_U64 = 16;
 
 tnum getalpha(u64vector *xs)
 {
-	int _ngg_tmp_1;
-	uint64_t x;
+	int i;
 	assert(u64vector_get_count(xs) > 0); /* main.ngg:26 */
 
 	tnum T = TNUM(u64vector_get_item(xs, 0), 0);
 
-	for(_ngg_tmp_1 = 0; _ngg_tmp_1 < u64vector_get_count(xs); _ngg_tmp_1 += 1) {
-		x = u64vector_get_item(xs, _ngg_tmp_1);
-		T = tnum_union(T, TNUM(x, 0));
+	for(i = 1; i < u64vector_get_count(xs); i += 1) {
+		T = tnum_union(T, TNUM(u64vector_get_item(xs, i), 0));
 	}
 
 	return T;
@@ -48,10 +46,10 @@ u64vector * getgamma(tnum T)
 
 void append_nondup(u64vector *vec, uint64_t x)
 {
-	int _ngg_tmp_2;
+	int _ngg_tmp_1;
 	uint64_t y;
-	for(_ngg_tmp_2 = 0; _ngg_tmp_2 < u64vector_get_count(vec); _ngg_tmp_2 += 1) {
-		y = u64vector_get_item(vec, _ngg_tmp_2);
+	for(_ngg_tmp_1 = 0; _ngg_tmp_1 < u64vector_get_count(vec); _ngg_tmp_1 += 1) {
+		y = u64vector_get_item(vec, _ngg_tmp_1);
 		if(y == x) {
 			return;
 		}
@@ -62,7 +60,7 @@ void append_nondup(u64vector *vec, uint64_t x)
 
 u64vector * mulvec(u64vector *avec, u64vector *bvec)
 {
-	int _ngg_tmp_3;
+	int _ngg_tmp_2;
 	uint64_t a;
 	u64vector *vec = (u64vector *) malloc(sizeof(u64vector));
 	if(vec == NULL) {
@@ -71,12 +69,12 @@ u64vector * mulvec(u64vector *avec, u64vector *bvec)
 	}
 
 	u64vector_construct(vec);
-	for(_ngg_tmp_3 = 0; _ngg_tmp_3 < u64vector_get_count(avec); _ngg_tmp_3 += 1) {
-		int _ngg_tmp_4;
+	for(_ngg_tmp_2 = 0; _ngg_tmp_2 < u64vector_get_count(avec); _ngg_tmp_2 += 1) {
+		int _ngg_tmp_3;
 		uint64_t b;
-		a = u64vector_get_item(avec, _ngg_tmp_3);
-		for(_ngg_tmp_4 = 0; _ngg_tmp_4 < u64vector_get_count(bvec); _ngg_tmp_4 += 1) {
-			b = u64vector_get_item(bvec, _ngg_tmp_4);
+		a = u64vector_get_item(avec, _ngg_tmp_2);
+		for(_ngg_tmp_3 = 0; _ngg_tmp_3 < u64vector_get_count(bvec); _ngg_tmp_3 += 1) {
+			b = u64vector_get_item(bvec, _ngg_tmp_3);
 			append_nondup(vec, a * b);
 		}
 	}
@@ -89,16 +87,16 @@ u64vector * mulvec(u64vector *avec, u64vector *bvec)
 
 _Bool left_subset_of_right(u64vector *l, u64vector *r)
 {
-	int _ngg_tmp_5;
+	int _ngg_tmp_4;
 	uint64_t li;
-	for(_ngg_tmp_5 = 0; _ngg_tmp_5 < u64vector_get_count(l); _ngg_tmp_5 += 1) {
-		int _ngg_tmp_6;
+	for(_ngg_tmp_4 = 0; _ngg_tmp_4 < u64vector_get_count(l); _ngg_tmp_4 += 1) {
+		int _ngg_tmp_5;
 		uint64_t ri;
-		li = u64vector_get_item(l, _ngg_tmp_5);
+		li = u64vector_get_item(l, _ngg_tmp_4);
 		_Bool found = false;
 
-		for(_ngg_tmp_6 = 0; _ngg_tmp_6 < u64vector_get_count(r); _ngg_tmp_6 += 1) {
-			ri = u64vector_get_item(r, _ngg_tmp_6);
+		for(_ngg_tmp_5 = 0; _ngg_tmp_5 < u64vector_get_count(r); _ngg_tmp_5 += 1) {
+			ri = u64vector_get_item(r, _ngg_tmp_5);
 			if(li == ri) {
 				found = true;
 				break;
@@ -115,12 +113,12 @@ _Bool left_subset_of_right(u64vector *l, u64vector *r)
 
 void printvec(const char * lbl, u64vector *vec)
 {
-	int _ngg_tmp_7;
+	int _ngg_tmp_6;
 	uint64_t x;
 	printf("%s = { ", lbl);
 
-	for(_ngg_tmp_7 = 0; _ngg_tmp_7 < u64vector_get_count(vec); _ngg_tmp_7 += 1) {
-		x = u64vector_get_item(vec, _ngg_tmp_7);
+	for(_ngg_tmp_6 = 0; _ngg_tmp_6 < u64vector_get_count(vec); _ngg_tmp_6 += 1) {
+		x = u64vector_get_item(vec, _ngg_tmp_6);
 		printf("%zu, ", x);
 	}
 
@@ -163,11 +161,11 @@ _ngg_tuple_isoptimal isoptimal(tnum P, tnum Q, _Bool print_sets)
 		printvec("gamma_optprod", gamma_optprod);
 	}
 
-	assert(!(u64vector_get_count(gamma_myprod) < u64vector_get_count(exactprods))); /* main.ngg:143 */
+	assert(!(u64vector_get_count(gamma_myprod) < u64vector_get_count(exactprods))); /* main.ngg:142 */
 
-	assert(u64vector_get_count(gamma_optprod) <= u64vector_get_count(gamma_myprod)); /* main.ngg:146 */
+	assert(u64vector_get_count(gamma_optprod) <= u64vector_get_count(gamma_myprod)); /* main.ngg:145 */
 
-	assert(left_subset_of_right(exactprods, gamma_myprod)); /* main.ngg:149 */
+	assert(left_subset_of_right(exactprods, gamma_myprod)); /* main.ngg:147 */
 
 	_Bool optimal = !tnums_differ(myprod, optprod);
 	puts((optimal ? "TAG: optimal" : "TAG: suboptimal"));

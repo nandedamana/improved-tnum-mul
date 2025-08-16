@@ -28,9 +28,8 @@ fun getalpha gives tnum takes xs u64vector
 	// Can't start with =TNUM/[0, 0] as it may not be part of xs
 	var T / =TNUM/[..0\xs, 0]
 
-	// TODO start from 1
-	for x in xs
-		==T =tnum_union/[T, =TNUM/[x, 0]]
+	for i from 1 under =get-count\xs
+		==T =tnum_union/[T, =TNUM/[..i\xs, 0]]
 	;
 
 	return T
@@ -145,7 +144,6 @@ fun isoptimal gives (bool, bool, MineVsKernel) takes P, Q tnum, print-sets bool
 	// If fails, either getalpha() or tnum_union() is incorrect
 	assert le =get-count\gamma_optprod =get-count\gamma_myprod
 
-	// TODO check correctness by checking elements
 	assert =left_subset_of_right/[exactprods, gamma_myprod]
 
 	var optimal / not =tnums_differ/[myprod, optprod]
