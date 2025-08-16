@@ -10,7 +10,7 @@ uint64_t MAX_U64 = 16;
 tnum getalpha(u64vector *xs)
 {
 	int i;
-	assert(u64vector_get_count(xs) > 0); /* main.ngg:26 */
+	assert(u64vector_get_count(xs) > 0); /* main.ngg:27 */
 
 	tnum T = TNUM(u64vector_get_item(xs, 0), 0);
 
@@ -125,10 +125,17 @@ void printvec(const char * lbl, u64vector *vec)
 	puts(" }");
 }
 
-_ngg_tuple_isoptimal isoptimal(tnum P, tnum Q, _Bool print_sets)
+_ngg_tuple_isoptimal isoptimal(tnum P, tnum Q, _Bool commutative, _Bool print_sets)
 {
 	tnum linprod = tnum_mul(P, Q);
-	tnum myprod = my_tnum_mul(P, Q);
+	tnum _tmp_1;
+	if(commutative) {
+		_tmp_1 = my_tnum_mul_commutative(P, Q);
+	} else {
+		_tmp_1 = my_tnum_mul(P, Q);
+	}
+
+	tnum myprod = _tmp_1;
 
 	u64vector *gamma_linprod = getgamma(linprod);
 	u64vector *gamma_myprod = getgamma(myprod);
@@ -161,23 +168,23 @@ _ngg_tuple_isoptimal isoptimal(tnum P, tnum Q, _Bool print_sets)
 		printvec("gamma_optprod", gamma_optprod);
 	}
 
-	assert(!(u64vector_get_count(gamma_myprod) < u64vector_get_count(exactprods))); /* main.ngg:142 */
+	assert(!(u64vector_get_count(gamma_myprod) < u64vector_get_count(exactprods))); /* main.ngg:143 */
 
-	assert(u64vector_get_count(gamma_optprod) <= u64vector_get_count(gamma_myprod)); /* main.ngg:145 */
+	assert(u64vector_get_count(gamma_optprod) <= u64vector_get_count(gamma_myprod)); /* main.ngg:146 */
 
-	assert(left_subset_of_right(exactprods, gamma_myprod)); /* main.ngg:147 */
+	assert(left_subset_of_right(exactprods, gamma_myprod)); /* main.ngg:148 */
 
 	_Bool optimal = !tnums_differ(myprod, optprod);
 	puts((optimal ? "TAG: optimal" : "TAG: suboptimal"));
 
-	MineVsKernel _tmp_1;
+	MineVsKernel _tmp_2;
 	if(u64vector_get_count(gamma_myprod) < u64vector_get_count(gamma_linprod)) {
-		_tmp_1 = MINE_VS_KERNEL_MINE_BETTER;
+		_tmp_2 = MINE_VS_KERNEL_MINE_BETTER;
 	} else {
-		_tmp_1 = ((u64vector_get_count(gamma_myprod) == u64vector_get_count(gamma_linprod)) ? MINE_VS_KERNEL_SAME : MINE_VS_KERNEL_MINE_WORSE);
+		_tmp_2 = ((u64vector_get_count(gamma_myprod) == u64vector_get_count(gamma_linprod)) ? MINE_VS_KERNEL_SAME : MINE_VS_KERNEL_MINE_WORSE);
 	}
 
-	MineVsKernel mine_vs_kernel = _tmp_1;
+	MineVsKernel mine_vs_kernel = _tmp_2;
 
 	switch(mine_vs_kernel) {
 	case MINE_VS_KERNEL_MINE_BETTER:
@@ -236,11 +243,14 @@ int main(int argc, char * *argv)
 {
 	size_t xm;
 	int bits = 3;
-	_Bool print_sets = false;
+	_Bool commutative = false;
+	_Bool print_sets = commutative;
 
 	int argi = 1;
 	while(argi < argc) {
-		if(0 == strcmp(argv[argi], "--bits")) {
+		if(0 == strcmp(argv[argi], "--commutative")) {
+			commutative = true;
+		} else if(0 == strcmp(argv[argi], "--bits")) {
 			argi += 1;
 			if(!(argi < argc)) {
 				fprintf(stderr, "error: missing argument for --bits\n");
@@ -287,16 +297,15 @@ int main(int argc, char * *argv)
 					}
 
 					flockfile(stdout);
-					_ngg_tuple_isoptimal _ngg_tmp_0 = isoptimal(x, y, print_sets);
+					_ngg_tuple_isoptimal _ngg_tmp_0 = isoptimal(x, y, commutative, print_sets);
 					MineVsKernel mine_vs_kernel = _ngg_tmp_0.m2;
 					_Bool linoptimal = _ngg_tmp_0.m1;
 					_Bool optimal = _ngg_tmp_0.m0;
-					if(!optimal) {
-						optimal_for_bits = false;
-					}
 
 					if(optimal) {
 						optimalcount += 1;
+					} else {
+						optimal_for_bits = false;
 					}
 
 					if(linoptimal) {

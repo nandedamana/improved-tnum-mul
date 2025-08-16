@@ -39,7 +39,6 @@ Notes:
   (two tristate numbers of width 6, each trit having three possible
   values).
 - Ill-formed tnums (value = mask = 1) are not processed.
-- Use the option `--print-sets` to print the concrete sets.
 
 ## Overview of the Improvement
 
@@ -135,6 +134,16 @@ Parts of this program are written in a custom language (ngg), whose
 compiler is not released yet. This shouldn't be an issue since the
 transpiled human-readable C files are also included in this repo. So a
 simple `make` should work.
+
+## Options
+
+- `--commutative`: try both `P*Q` and `Q*P`; then pick the best based
+  on the popcount of result.mask.
+
+- `--bits N`: set the range to [0, 2^N) (for each of P.mask, P.value,
+  Q.mask, and Q.value, excluding the ill-formed ones).
+
+- `--print-sets`: print the concrete sets.
 
 ## Copyright
 

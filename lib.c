@@ -164,7 +164,7 @@ struct tnum my_tnum_mul(struct tnum a, struct tnum b)
 	return acc;
 }
 
-struct tnum my_tnum_mul_bidir(struct tnum a, struct tnum b)
+struct tnum my_tnum_mul_commutative(struct tnum a, struct tnum b)
 {
 	struct tnum t1 = my_tnum_mul(a, b);
 	struct tnum t2 = my_tnum_mul(b, a);

@@ -14,6 +14,7 @@ shadow fun TNUM gives tnum takes v, m u64;
 shadow fun tnum_mul gives tnum takes a, b tnum;
 shadow fun tnum_union gives tnum takes a, b tnum;
 shadow fun my_tnum_mul gives tnum takes a, b tnum;
+shadow fun my_tnum_mul_commutative gives tnum takes a, b tnum;
 shadow fun wellformed gives bool takes x tnum;
 shadow fun ingamma gives bool takes x u64, T tnum;
 shadow fun print_tnum takes lbl string, x tnum;
@@ -99,9 +100,9 @@ enum MineVsKernel
 ;
 
 // Returns myprod optimal, linprod optimal, precision comparison
-fun isoptimal gives (bool, bool, MineVsKernel) takes P, Q tnum, print-sets bool
-	var linprod tnum / =tnum_mul/[P, Q]
-	var myprod tnum / =my_tnum_mul/[P, Q]
+fun isoptimal gives (bool, bool, MineVsKernel) takes P, Q tnum, commutative, print-sets bool
+	var linprod / =tnum_mul/[P, Q]
+	var myprod / xif commutative then =my_tnum_mul_commutative/[P, Q] else =my_tnum_mul/[P, Q]
 
 	local gamma_linprod / =getgamma/[linprod]
 	local gamma_myprod / =getgamma/[myprod]
@@ -172,11 +173,14 @@ fun isoptimal gives (bool, bool, MineVsKernel) takes P, Q tnum, print-sets bool
 
 fun $main
 	var bits / 3
-	var print-sets / false
+	var commutative, print-sets bool
 
 	var argi / 1
 	while lt argi argc
 		switch ..argi\argv
+		case '--commutative'
+			==commutative true
+		;
 		case '--bits'
 			sum= argi 1
 			if not lt argi argc
@@ -216,13 +220,13 @@ fun $main
 						continue;;
 
 					=flockfile/[stdout]
-					var (optimal, linoptimal, mine-vs-kernel) / =isoptimal/[x, y, print-sets]
-					if not optimal
-						==optimal_for_bits false
-					;
+					var (optimal, linoptimal, mine-vs-kernel) /
+						=isoptimal/[x, y, commutative, print-sets]
 
 					if optimal
 						sum= optimalcount 1;;
+					else
+						==optimal_for_bits false;;
 
 					if linoptimal
 						sum= optimalcount_linux 1;;
