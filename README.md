@@ -30,7 +30,7 @@ is optimal? (bits = 6): 0
 
 The above output shows the new algorithm was an improvement over the
 current one in 285k cases, and worse in 17k, while preserving the
-precision in 229k cases. It achieved optimality in in 81% compared to
+precision in 229k cases. It achieved optimality in in 81% cases compared to
 the 38% obtained by the current algorithm.
 
 Notes:
