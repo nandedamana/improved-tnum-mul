@@ -325,9 +325,26 @@ _ngg_tuple_isoptimal isoptimal(tnum P, tnum Q)
 
 int main(int argc, char * *argv)
 {
-	size_t _ngg_tmp_8;
-	int bits;
-	int BITS[1] = {4};
+	size_t xm;
+	int bits = 3;
+
+	int argi = 1;
+	while(argi < argc) {
+		if(0 == strcmp(argv[argi], "--bits")) {
+			argi += 1;
+			if(!(argi < argc)) {
+				fprintf(stderr, "error: missing argument for --bits\n");
+				exit(EXIT_FAILURE);
+			}
+
+			bits = atoi(argv[argi]);
+		} else {
+			fprintf(stderr, "error: unknown command-line option: %s\n", argv[argi]);
+			exit(EXIT_FAILURE);
+		}
+
+		argi += 1;
+	}
 
 	int bettercount = 0;
 	int samecount = bettercount;
@@ -336,82 +353,78 @@ int main(int argc, char * *argv)
 	int optimalcount_linux = bettercount;
 	int totalcount = bettercount;
 
-	for(_ngg_tmp_8 = 0u; _ngg_tmp_8 < (sizeof BITS / sizeof BITS[0]); _ngg_tmp_8 += (1u)) {
-		size_t xm;
-		bits = BITS[_ngg_tmp_8];
-		unsigned int maxnum = (unsigned int) (pow(2, bits) - 1);
-		_Bool optimal_for_bits = true;
+	unsigned int maxnum = (unsigned int) (pow(2, bits) - 1);
+	_Bool optimal_for_bits = true;
 
-		#pragma omp parallel for
-		for(xm = 0u; xm <= maxnum; xm += 1) {
-			size_t xv;
-			for(xv = 0u; xv <= maxnum; xv += 1) {
-				size_t ym;
-				tnum x = TNUM(xv, xm);
-				if(!wellformed(x)) {
-					continue;
-				}
+	#pragma omp parallel for
+	for(xm = 0u; xm <= maxnum; xm += 1) {
+		size_t xv;
+		for(xv = 0u; xv <= maxnum; xv += 1) {
+			size_t ym;
+			tnum x = TNUM(xv, xm);
+			if(!wellformed(x)) {
+				continue;
+			}
 
-				for(ym = 0u; ym <= maxnum; ym += 1) {
-					size_t yv;
-					for(yv = 0u; yv <= maxnum; yv += 1) {
-						tnum y = TNUM(yv, ym);
-						if(!wellformed(y)) {
-							continue;
-						}
-
-						flockfile(stdout);
-						_ngg_tuple_isoptimal _ngg_tmp_0 = isoptimal(x, y);
-						MineVsKernel mine_vs_kernel = _ngg_tmp_0.m2;
-						_Bool linoptimal = _ngg_tmp_0.m1;
-						_Bool optimal = _ngg_tmp_0.m0;
-						if(!optimal) {
-							optimal_for_bits = false;
-						}
-
-						if(optimal) {
-							optimalcount += 1;
-						}
-
-						if(linoptimal) {
-							optimalcount_linux += 1;
-						}
-
-						switch(mine_vs_kernel) {
-						case MINE_VS_KERNEL_MINE_BETTER:
-						{
-							bettercount += 1;
-							break;
-						}
-						case MINE_VS_KERNEL_SAME:
-						{
-							samecount += 1;
-							break;
-						}
-						case MINE_VS_KERNEL_MINE_WORSE:
-						{
-							worsecount += 1;
-							break;
-						}
-						}
-
-						totalcount += 1;
-
-						puts("mine vs kernel: ");
-						printf("  better = %d\n", bettercount);
-						printf("  same   = %d\n", samecount);
-						printf("  worse  = %d\n", worsecount);
-						printf("  myprod optimal cases  = %d / %d\n", optimalcount, totalcount);
-						printf("  linprod optimal cases = %d / %d\n", optimalcount_linux, totalcount);
-						puts("----------------------------------------------------------");
-						funlockfile(stdout);
+			for(ym = 0u; ym <= maxnum; ym += 1) {
+				size_t yv;
+				for(yv = 0u; yv <= maxnum; yv += 1) {
+					tnum y = TNUM(yv, ym);
+					if(!wellformed(y)) {
+						continue;
 					}
+
+					flockfile(stdout);
+					_ngg_tuple_isoptimal _ngg_tmp_0 = isoptimal(x, y);
+					MineVsKernel mine_vs_kernel = _ngg_tmp_0.m2;
+					_Bool linoptimal = _ngg_tmp_0.m1;
+					_Bool optimal = _ngg_tmp_0.m0;
+					if(!optimal) {
+						optimal_for_bits = false;
+					}
+
+					if(optimal) {
+						optimalcount += 1;
+					}
+
+					if(linoptimal) {
+						optimalcount_linux += 1;
+					}
+
+					switch(mine_vs_kernel) {
+					case MINE_VS_KERNEL_MINE_BETTER:
+					{
+						bettercount += 1;
+						break;
+					}
+					case MINE_VS_KERNEL_SAME:
+					{
+						samecount += 1;
+						break;
+					}
+					case MINE_VS_KERNEL_MINE_WORSE:
+					{
+						worsecount += 1;
+						break;
+					}
+					}
+
+					totalcount += 1;
+
+					printf("mine vs kernel (bits = %d): \n", bits);
+					printf("  better = %d\n", bettercount);
+					printf("  same   = %d\n", samecount);
+					printf("  worse  = %d\n", worsecount);
+					printf("  myprod optimal cases  = %d / %d\n", optimalcount, totalcount);
+					printf("  linprod optimal cases = %d / %d\n", optimalcount_linux, totalcount);
+					puts("----------------------------------------------------------");
+					funlockfile(stdout);
 				}
 			}
 		}
-
-		printf("is optimal for %d bit(s)? = %d\n", bits, optimal_for_bits);
 	}
+
+	printf("is optimal? (bits = %d): %d\n", bits, optimal_for_bits);
 
 	return 0;
 }

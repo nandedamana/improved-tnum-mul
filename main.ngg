@@ -174,71 +174,84 @@ fun isoptimal gives (bool, bool, MineVsKernel) takes P, Q tnum
 ;
 
 fun $main
-	//var BITS / [1, 2, 4, 8]
-	var BITS / [4]
+	var bits / 3
 
-	// TODO reset per bit?
+	var argi / 1
+	while lt argi argc
+		switch ..argi\argv
+		case '--bits'
+			sum= argi 1
+			if not lt argi argc
+				=fprintf/[stderr, 'error: missing argument for --bits\n']
+				=exit/[EXIT_FAILURE]
+			;
+			==bits =atoi/[..argi\argv]
+		;
+		default
+			=fprintf/[stderr, 'error: unknown command-line option: %s\n', ..argi\argv]
+			=exit/[EXIT_FAILURE]
+		;
+
+		sum= argi 1
+	;
+
 	var bettercount, samecount, worsecount, optimalcount, optimalcount_linux, totalcount int
 
-	// TODO tnums generated for testing n+1 bits is a superset of tnums generated
-	// for n bits; memoize or skip.
-	for bits in BITS
-		var maxnum / as uint sub =pow/[2, bits] 1
-		var optimal_for_bits / true
+	var maxnum / as uint sub =pow/[2, bits] 1
+	var optimal_for_bits / true
 
-		// Generate all possible well-formed abstract pairs (P, Q) within the range
-		v #pragma omp parallel for
-		for xm from 0u upto maxnum
-			for xv from 0u upto maxnum
-				var x / =TNUM/[xv, xm]
-				if not =wellformed/[x]
-					continue;;
+	// Generate all possible well-formed abstract pairs (P, Q) within the range
+	v #pragma omp parallel for
+	for xm from 0u upto maxnum
+		for xv from 0u upto maxnum
+			var x / =TNUM/[xv, xm]
+			if not =wellformed/[x]
+				continue;;
 
-				for ym from 0u upto maxnum
-					for yv from 0u upto maxnum
-						var y / =TNUM/[yv, ym]
-						if not =wellformed/[y]
-							continue;;
+			for ym from 0u upto maxnum
+				for yv from 0u upto maxnum
+					var y / =TNUM/[yv, ym]
+					if not =wellformed/[y]
+						continue;;
 
-						=flockfile/[stdout]
-						var (optimal, linoptimal, mine-vs-kernel) / =isoptimal/[x, y]
-						if not optimal
-							==optimal_for_bits false
-						;
-
-						if optimal
-							sum= optimalcount 1;;
-
-						if linoptimal
-							sum= optimalcount_linux 1;;
-
-						switch mine-vs-kernel
-						case MINE_BETTER\MineVsKernel
-							sum= bettercount 1;;
-						case SAME\MineVsKernel
-							sum= samecount 1;;
-						case MINE_WORSE\MineVsKernel
-							sum= worsecount 1;;
-
-						sum= totalcount 1
-
-						=puts/['mine vs kernel: ']
-						=printf/['  better = %d\n', bettercount]
-						=printf/['  same   = %d\n', samecount]
-						=printf/['  worse  = %d\n', worsecount]
-						=printf/['  myprod optimal cases  = %d / %d\n',
-						         optimalcount, totalcount]
-						=printf/['  linprod optimal cases = %d / %d\n',
-						         optimalcount_linux, totalcount]
-						=puts/['----------------------------------------------------------']
-						=funlockfile/[stdout]
+					=flockfile/[stdout]
+					var (optimal, linoptimal, mine-vs-kernel) / =isoptimal/[x, y]
+					if not optimal
+						==optimal_for_bits false
 					;
+
+					if optimal
+						sum= optimalcount 1;;
+
+					if linoptimal
+						sum= optimalcount_linux 1;;
+
+					switch mine-vs-kernel
+					case MINE_BETTER\MineVsKernel
+						sum= bettercount 1;;
+					case SAME\MineVsKernel
+						sum= samecount 1;;
+					case MINE_WORSE\MineVsKernel
+						sum= worsecount 1;;
+
+					sum= totalcount 1
+
+					=printf/['mine vs kernel (bits = %d): \n', bits]
+					=printf/['  better = %d\n', bettercount]
+					=printf/['  same   = %d\n', samecount]
+					=printf/['  worse  = %d\n', worsecount]
+					=printf/['  myprod optimal cases  = %d / %d\n',
+					         optimalcount, totalcount]
+					=printf/['  linprod optimal cases = %d / %d\n',
+					         optimalcount_linux, totalcount]
+					=puts/['----------------------------------------------------------']
+					=funlockfile/[stdout]
 				;
 			;
 		;
-
-		=printf/['is optimal for %d bit(s)? = %d\n', bits, optimal_for_bits]
 	;
+
+	=printf/['is optimal? (bits = %d): %d\n', bits, optimal_for_bits]
 
 	return 0;
 ;
