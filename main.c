@@ -7,101 +7,11 @@
 
 uint64_t MAX_U64 = 16;
 
-void u64vector__resize(u64vector *this, int newcount)
-{
-	if(newcount > this->alloccount) {
-		int alloccountbak = this->alloccount;
-
-		this->alloccount = 2 * this->alloccount;
-
-		assert(this->alloccount > alloccountbak); /* vector.ngg:17 */
-
-		assert(newcount <= this->alloccount); /* vector.ngg:18 */
-
-		this->arr = realloc(this->arr, this->alloccount * sizeof(this->arr[0]));
-		if(this->arr == NULL) { perror(NULL); exit(EXIT_FAILURE); }
-
-	}
-
-	this->count = newcount;
-}
-
-void u64vector_append(u64vector *this, uint64_t newitem)
-{
-	int newcount = 1 + this->count;
-
-	u64vector__resize(this, newcount);
-
-	this->arr[newcount - 1] = newitem;
-}
-
-void u64vector_clear(u64vector *this)
-{
-	this->count = 0;
-	this->alloccount = 8;
-	this->arr = realloc(this->arr, this->alloccount * sizeof(this->arr[0]));
-	if(this->arr == NULL) { perror(NULL); exit(EXIT_FAILURE); }
-
-}
-
-uint64_t u64vector_get_item(u64vector *this, int index)
-{
-	assert(index < this->count); /* vector.ngg:43 */
-
-	return this->arr[index];
-}
-
-uint64_t u64vector_pop(u64vector *this)
-{
-	assert(this->count > 0); /* vector.ngg:49 */
-	uint64_t r = u64vector_get_item(this, this->count - 1);
-	this->count = this->count - 1;
-
-	return r;
-}
-
-void u64vector_set_item(u64vector *this, int index, uint64_t itm)
-{
-	assert(index < this->count); /* vector.ngg:62 */
-
-	this->arr[index] = itm;
-}
-
-int u64vector_get_count(u64vector *this)
-{
-	return this->count;
-}
-
-_Bool u64vector_is_empty(u64vector *this)
-{
-	return 0 == this->count;
-}
-
-void u64vector_destruct(u64vector *this)
-{
-	if(this->arr) {
-		free(this->arr);
-	}
-}
-
-void u64vector_construct(u64vector *this)
-{
-	this->alloccount = 8;
-	uint64_t *_tmp_1 = (uint64_t *) calloc((size_t) 8, sizeof(uint64_t));
-	if(_tmp_1 == NULL) {
-		perror(NULL);
-		exit(EXIT_FAILURE);
-	}
-
-	this->arr = _tmp_1;
-	this->count = 0;
-}
-
 tnum getalpha(u64vector *xs)
 {
 	int _ngg_tmp_1;
 	uint64_t x;
-	assert(u64vector_get_count(xs) > 0); /* main.ngg:28 */
+	assert(u64vector_get_count(xs) > 0); /* main.ngg:26 */
 
 	tnum T = TNUM(u64vector_get_item(xs, 0), 0);
 
@@ -161,7 +71,6 @@ u64vector * mulvec(u64vector *avec, u64vector *bvec)
 	}
 
 	u64vector_construct(vec);
-
 	for(_ngg_tmp_3 = 0; _ngg_tmp_3 < u64vector_get_count(avec); _ngg_tmp_3 += 1) {
 		int _ngg_tmp_4;
 		uint64_t b;
@@ -254,11 +163,11 @@ _ngg_tuple_isoptimal isoptimal(tnum P, tnum Q, _Bool print_sets)
 		printvec("gamma_optprod", gamma_optprod);
 	}
 
-	assert(!(u64vector_get_count(gamma_myprod) < u64vector_get_count(exactprods))); /* main.ngg:146 */
+	assert(!(u64vector_get_count(gamma_myprod) < u64vector_get_count(exactprods))); /* main.ngg:143 */
 
-	assert(u64vector_get_count(gamma_optprod) <= u64vector_get_count(gamma_myprod)); /* main.ngg:149 */
+	assert(u64vector_get_count(gamma_optprod) <= u64vector_get_count(gamma_myprod)); /* main.ngg:146 */
 
-	assert(left_subset_of_right(exactprods, gamma_myprod)); /* main.ngg:152 */
+	assert(left_subset_of_right(exactprods, gamma_myprod)); /* main.ngg:149 */
 
 	_Bool optimal = !tnums_differ(myprod, optprod);
 	puts((optimal ? "TAG: optimal" : "TAG: suboptimal"));

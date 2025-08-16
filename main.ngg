@@ -1,10 +1,10 @@
-// 2025-08-09
+// Nandakumar Edamana
+// Started 2025-08-09
 
-vh #include <stdint.h>
 vh #include "lib.h"
 
 refer math
-include vector
+refer './nggvector.ngg'
 
 vh typedef struct tnum tnum;
 
@@ -21,8 +21,6 @@ shadow fun tnums_differ gives bool takes t1, t2 tnum;
 
 // Careful when increasing this; ASSERT1 could fail; read the related comment.
 var MAX_U64 u64 / 16
-
-bake vector with u64 as u64vector
 
 fun getalpha gives tnum takes xs u64vector
 	assert gt =get-count\xs 0
@@ -50,8 +48,6 @@ fun getgamma gives u64vector takes T tnum
 	return steal vec
 ;
 
-// TODO use set instead
-// Yes, duplicates are a reality when multiplying gamma(P) with gamma(Q)
 fun append-nondup takes vec u64vector, x u64
 	// Can't assume vec is sorted
 	for y in vec
@@ -62,10 +58,11 @@ fun append-nondup takes vec u64vector, x u64
 ;
 
 fun mulvec gives u64vector takes avec, bvec u64vector
-	local vec new u64vector
+	local vec new u64vector; // TODO use set instead
 
 	for a in avec
 		for b in bvec
+			// Yes, duplicates are expected when multiplying gamma(P) with gamma(Q)
 			=append-nondup/[vec, mul a b];;;
 
 	return steal vec
