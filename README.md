@@ -64,7 +64,7 @@ From the paper by Harishankar et al.:
 > ...
 
 Example showing the above-mentioned imprecision with the current
-`tnum_mul`, when it is done with iteration 1:
+`tnum_mul(a, b)`, with a = &#120583;1 and b = 11.
 
 ```
     11 *
