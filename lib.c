@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "lib.h"
 
+// BEGIN from linux
+
 struct tnum tnum_add(struct tnum a, struct tnum b)
 {
 	u64 sm, sv, sigma, chi, mu;
