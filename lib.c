@@ -43,6 +43,18 @@ struct tnum tnum_mul(struct tnum a, struct tnum b)
 	return tnum_add(TNUM(acc_v, 0), acc_m);
 }
 
+/* Note that if a and b disagree - i.e. one has a 'known 1' where the other has
+ * a 'known 0' - this will return a 'known 1' for that bit.
+ */
+struct tnum tnum_intersect(struct tnum a, struct tnum b)
+{
+	u64 v, mu;
+
+	v = a.value | b.value;
+	mu = a.mask & b.mask;
+	return TNUM(v & ~mu, mu);
+}
+
 // END from linux
 
 // TODO make sure this is correct
@@ -153,6 +165,20 @@ struct tnum my_tnum_mul(struct tnum a, struct tnum b)
 		b = tnum_lshift(b, 1);
 	}
 	return acc;
+}
+
+struct tnum my_tnum_mul_bidir(struct tnum a, struct tnum b)
+{
+	struct tnum t1 = my_tnum_mul(a, b);
+	struct tnum t2 = my_tnum_mul(b, a);
+
+	//return tnum_intersect(t1, t2);
+
+	// Better than tnum_intersect(t1, t2);
+	if (__builtin_popcount(t1.mask) < __builtin_popcount(t2.mask))
+		return t1;
+
+	return t2;
 }
 
 // Use value-mask decomposition like Harishankar et al.
