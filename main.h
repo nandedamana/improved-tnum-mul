@@ -16,9 +16,9 @@ struct u64vector {
 };
 
 enum MineVsKernel {
-	MINE_VS_KERNEL_BETTER,
+	MINE_VS_KERNEL_MINE_BETTER,
 	MINE_VS_KERNEL_SAME,
-	MINE_VS_KERNEL_WORSE,
+	MINE_VS_KERNEL_MINE_WORSE,
 };
 
 struct _ngg_tuple_isoptimal {

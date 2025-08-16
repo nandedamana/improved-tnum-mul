@@ -99,7 +99,7 @@ fun printvec takes lbl string, vec u64vector
 ;
 
 enum MineVsKernel
-	BETTER, SAME, WORSE
+	MINE_BETTER, SAME, MINE_WORSE
 ;
 
 // Returns myprod optimal, linprod optimal, precision comparison
@@ -149,21 +149,26 @@ fun isoptimal gives (bool, bool, MineVsKernel) takes P, Q tnum
 	// TODO check correctness by checking elements
 	assert =left_subset_of_right/[exactprods, gamma_myprod]
 
-	var optimal / true
+	var optimal / not =tnums_differ/[myprod, optprod]
+	=puts/[xif optimal then 'TAG: optimal' else 'TAG: suboptimal']
 
-	if =tnums_differ/[myprod, optprod]
-		==optimal false
-		=puts/['^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Suboptimal!']
-	;
+	var mine-vs-kernel /
+		xif lt =get-count\gamma_myprod =get-count\gamma_linprod
+			MINE_BETTER\MineVsKernel
+		else xif eq =get-count\gamma_myprod =get-count\gamma_linprod
+			SAME\MineVsKernel
+		else
+			MINE_WORSE\MineVsKernel
+
+	switch mine-vs-kernel
+	case MINE_BETTER\MineVsKernel
+		=puts/['TAG: better'];;
+	case SAME\MineVsKernel
+		=puts/['TAG: same'];;
+	case MINE_WORSE\MineVsKernel
+		=puts/['TAG: worse'];;
 
 	=puts/['']
-
-	var mine-vs-kernel / WORSE\MineVsKernel
-
-	if lt =get-count\gamma_myprod =get-count\gamma_linprod
-		==mine-vs-kernel BETTER\MineVsKernel;;
-	elif eq =get-count\gamma_myprod =get-count\gamma_linprod
-		==mine-vs-kernel SAME\MineVsKernel;;
 
 	return optimal, not =tnums_differ/[linprod, optprod], mine-vs-kernel
 ;
@@ -195,6 +200,7 @@ fun $main
 						if not =wellformed/[y]
 							continue;;
 
+						=flockfile/[stdout]
 						var (optimal, linoptimal, mine-vs-kernel) / =isoptimal/[x, y]
 						if not optimal
 							==optimal_for_bits false
@@ -207,26 +213,31 @@ fun $main
 							sum= optimalcount_linux 1;;
 
 						switch mine-vs-kernel
-						case BETTER\MineVsKernel
+						case MINE_BETTER\MineVsKernel
 							sum= bettercount 1;;
 						case SAME\MineVsKernel
 							sum= samecount 1;;
-						case WORSE\MineVsKernel
+						case MINE_WORSE\MineVsKernel
 							sum= worsecount 1;;
 
 						sum= totalcount 1
+
+						=puts/['mine vs kernel: ']
+						=printf/['  better = %d\n', bettercount]
+						=printf/['  same   = %d\n', samecount]
+						=printf/['  worse  = %d\n', worsecount]
+						=printf/['  myprod optimal cases  = %d / %d\n',
+						         optimalcount, totalcount]
+						=printf/['  linprod optimal cases = %d / %d\n',
+						         optimalcount_linux, totalcount]
+						=puts/['----------------------------------------------------------']
+						=funlockfile/[stdout]
 					;
 				;
 			;
 		;
 
-		=printf/['optimal for %d bit(s) = %d\n', bits, optimal_for_bits]
-		=puts/['Mine vs kernel: ']
-		=printf/['  better = %d\n', bettercount]
-		=printf/['  same   = %d\n', samecount]
-		=printf/['  worse  = %d\n', worsecount]
-		=printf/['  myprod optimal cases  = %d / %d\n', optimalcount, totalcount]
-		=printf/['  linprod optimal cases = %d / %d\n', optimalcount_linux, totalcount]
+		=printf/['is optimal for %d bit(s)? = %d\n', bits, optimal_for_bits]
 	;
 
 	return 0;

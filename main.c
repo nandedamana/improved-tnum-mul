@@ -258,22 +258,37 @@ _ngg_tuple_isoptimal isoptimal(tnum P, tnum Q)
 
 	assert(left_subset_of_right(exactprods, gamma_myprod)); /* main.ngg:150 */
 
-	_Bool optimal = true;
+	_Bool optimal = !tnums_differ(myprod, optprod);
+	puts((optimal ? "TAG: optimal" : "TAG: suboptimal"));
 
-	if(tnums_differ(myprod, optprod)) {
-		optimal = false;
-		puts("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Suboptimal!");
+	MineVsKernel _tmp_1;
+	if(u64vector_get_count(gamma_myprod) < u64vector_get_count(gamma_linprod)) {
+		_tmp_1 = MINE_VS_KERNEL_MINE_BETTER;
+	} else {
+		_tmp_1 = ((u64vector_get_count(gamma_myprod) == u64vector_get_count(gamma_linprod)) ? MINE_VS_KERNEL_SAME : MINE_VS_KERNEL_MINE_WORSE);
+	}
+
+	MineVsKernel mine_vs_kernel = _tmp_1;
+
+	switch(mine_vs_kernel) {
+	case MINE_VS_KERNEL_MINE_BETTER:
+	{
+		puts("TAG: better");
+		break;
+	}
+	case MINE_VS_KERNEL_SAME:
+	{
+		puts("TAG: same");
+		break;
+	}
+	case MINE_VS_KERNEL_MINE_WORSE:
+	{
+		puts("TAG: worse");
+		break;
+	}
 	}
 
 	puts("");
-
-	MineVsKernel mine_vs_kernel = MINE_VS_KERNEL_WORSE;
-
-	if(u64vector_get_count(gamma_myprod) < u64vector_get_count(gamma_linprod)) {
-		mine_vs_kernel = MINE_VS_KERNEL_BETTER;
-	} else if(u64vector_get_count(gamma_myprod) == u64vector_get_count(gamma_linprod)) {
-		mine_vs_kernel = MINE_VS_KERNEL_SAME;
-	}
 
 	if(gamma_linprod) {
 		u64vector_destruct(gamma_linprod);
@@ -345,6 +360,7 @@ int main(int argc, char * *argv)
 							continue;
 						}
 
+						flockfile(stdout);
 						_ngg_tuple_isoptimal _ngg_tmp_0 = isoptimal(x, y);
 						MineVsKernel mine_vs_kernel = _ngg_tmp_0.m2;
 						_Bool linoptimal = _ngg_tmp_0.m1;
@@ -362,7 +378,7 @@ int main(int argc, char * *argv)
 						}
 
 						switch(mine_vs_kernel) {
-						case MINE_VS_KERNEL_BETTER:
+						case MINE_VS_KERNEL_MINE_BETTER:
 						{
 							bettercount += 1;
 							break;
@@ -372,7 +388,7 @@ int main(int argc, char * *argv)
 							samecount += 1;
 							break;
 						}
-						case MINE_VS_KERNEL_WORSE:
+						case MINE_VS_KERNEL_MINE_WORSE:
 						{
 							worsecount += 1;
 							break;
@@ -380,18 +396,21 @@ int main(int argc, char * *argv)
 						}
 
 						totalcount += 1;
+
+						puts("mine vs kernel: ");
+						printf("  better = %d\n", bettercount);
+						printf("  same   = %d\n", samecount);
+						printf("  worse  = %d\n", worsecount);
+						printf("  myprod optimal cases  = %d / %d\n", optimalcount, totalcount);
+						printf("  linprod optimal cases = %d / %d\n", optimalcount_linux, totalcount);
+						puts("----------------------------------------------------------");
+						funlockfile(stdout);
 					}
 				}
 			}
 		}
 
-		printf("optimal for %d bit(s) = %d\n", bits, optimal_for_bits);
-		puts("Mine vs kernel: ");
-		printf("  better = %d\n", bettercount);
-		printf("  same   = %d\n", samecount);
-		printf("  worse  = %d\n", worsecount);
-		printf("  myprod optimal cases  = %d / %d\n", optimalcount, totalcount);
-		printf("  linprod optimal cases = %d / %d\n", optimalcount_linux, totalcount);
+		printf("is optimal for %d bit(s)? = %d\n", bits, optimal_for_bits);
 	}
 
 	return 0;
@@ -402,6 +421,6 @@ _ngg_tuple_isoptimal _ngg_tuple_isoptimal_default()
 	_ngg_tuple_isoptimal s;
 	s.m0 = false;
 	s.m1 = false;
-	s.m2 = MINE_VS_KERNEL_BETTER;
+	s.m2 = MINE_VS_KERNEL_MINE_BETTER;
 	return s;
 }
