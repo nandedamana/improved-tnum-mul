@@ -218,7 +218,7 @@ void printvec(const char * lbl, u64vector *vec)
 	puts(" }");
 }
 
-_ngg_tuple_isoptimal isoptimal(tnum P, tnum Q)
+_ngg_tuple_isoptimal isoptimal(tnum P, tnum Q, _Bool print_sets)
 {
 	tnum linprod = tnum_mul(P, Q);
 	tnum myprod = my_tnum_mul(P, Q);
@@ -245,18 +245,20 @@ _ngg_tuple_isoptimal isoptimal(tnum P, tnum Q)
 	printf("count(exactprods) = %d\n", u64vector_get_count(exactprods));
 	printf("count(gamma_optprod) = %d\n", u64vector_get_count(gamma_optprod));
 
-	printvec("gamma_linprod", gamma_linprod);
-	printvec("gamma_myprod", gamma_myprod);
-	printvec("gamma_P", gamma_P);
-	printvec("gamma_Q", gamma_Q);
-	printvec("exactprods", exactprods);
-	printvec("gamma_optprod", gamma_optprod);
+	if(print_sets) {
+		printvec("gamma_linprod", gamma_linprod);
+		printvec("gamma_myprod", gamma_myprod);
+		printvec("gamma_P", gamma_P);
+		printvec("gamma_Q", gamma_Q);
+		printvec("exactprods", exactprods);
+		printvec("gamma_optprod", gamma_optprod);
+	}
 
-	assert(!(u64vector_get_count(gamma_myprod) < u64vector_get_count(exactprods))); /* main.ngg:144 */
+	assert(!(u64vector_get_count(gamma_myprod) < u64vector_get_count(exactprods))); /* main.ngg:146 */
 
-	assert(u64vector_get_count(gamma_optprod) <= u64vector_get_count(gamma_myprod)); /* main.ngg:147 */
+	assert(u64vector_get_count(gamma_optprod) <= u64vector_get_count(gamma_myprod)); /* main.ngg:149 */
 
-	assert(left_subset_of_right(exactprods, gamma_myprod)); /* main.ngg:150 */
+	assert(left_subset_of_right(exactprods, gamma_myprod)); /* main.ngg:152 */
 
 	_Bool optimal = !tnums_differ(myprod, optprod);
 	puts((optimal ? "TAG: optimal" : "TAG: suboptimal"));
@@ -327,6 +329,7 @@ int main(int argc, char * *argv)
 {
 	size_t xm;
 	int bits = 3;
+	_Bool print_sets = false;
 
 	int argi = 1;
 	while(argi < argc) {
@@ -338,6 +341,8 @@ int main(int argc, char * *argv)
 			}
 
 			bits = atoi(argv[argi]);
+		} else if(0 == strcmp(argv[argi], "--print-sets")) {
+			print_sets = true;
 		} else {
 			fprintf(stderr, "error: unknown command-line option: %s\n", argv[argi]);
 			exit(EXIT_FAILURE);
@@ -375,7 +380,7 @@ int main(int argc, char * *argv)
 					}
 
 					flockfile(stdout);
-					_ngg_tuple_isoptimal _ngg_tmp_0 = isoptimal(x, y);
+					_ngg_tuple_isoptimal _ngg_tmp_0 = isoptimal(x, y, print_sets);
 					MineVsKernel mine_vs_kernel = _ngg_tmp_0.m2;
 					_Bool linoptimal = _ngg_tmp_0.m1;
 					_Bool optimal = _ngg_tmp_0.m0;

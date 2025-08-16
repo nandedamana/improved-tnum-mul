@@ -43,6 +43,6 @@ void append_nondup(u64vector *vec, uint64_t x);
 u64vector * mulvec(u64vector *avec, u64vector *bvec);
 _Bool left_subset_of_right(u64vector *l, u64vector *r);
 void printvec(const char * lbl, u64vector *vec);
-_ngg_tuple_isoptimal isoptimal(tnum P, tnum Q);
+_ngg_tuple_isoptimal isoptimal(tnum P, tnum Q, _Bool print_sets);
 int main(int argc, char * *argv);
 _ngg_tuple_isoptimal _ngg_tuple_isoptimal_default();
