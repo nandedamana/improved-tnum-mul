@@ -129,11 +129,14 @@ struct tnum my_tnum_mul(struct tnum a, struct tnum b)
 #endif
 
 // No value-mask decomposition unlike Harishankar et al.
-/* Perform long multiplication, iterating through the trits in a. A small trick
- * inside the loop finds two possible partial products and takes their union,
- * improving the precision significantly.
- * A comment inside refers to a paper by Harishankar et al.:
- * https://arxiv.org/abs/2105.05398
+/* Perform long multiplication, iterating through the trits in a.
+ * Inside `else if (a.mask & 1)`, instead of simply multiplying b with LSB(a)'s
+ * uncertainty and accumulating directly, we find two possible partial products
+ * (one for LSB(a) = 0 and another for LSB(a) = 1), and add their union to the
+ * accumulator. This addresses an issue pointed out in an open question ("How
+ * can we incorporate correlation in unknown bits across partial products?")
+ * left by Harishankar et al. (https://arxiv.org/abs/2105.05398), improving
+ * the general precision significantly.
  */
 struct tnum my_tnum_mul(struct tnum a, struct tnum b)
 {
@@ -141,26 +144,18 @@ struct tnum my_tnum_mul(struct tnum a, struct tnum b)
 
 	while (a.value || a.mask) {
 		/* LSB of tnum a is a certain 1 */
-		if (a.value & 1) {
+		if (a.value & 1)
 			acc = tnum_add(acc, b);
-		}
 		/* LSB of tnum a is uncertain */
 		else if (a.mask & 1) {
-			/* Simply multiplying b with LSB(a)'s uncertainty results in decreased
-			 * precision, as explained in an open question ("How can we incorporate
-			 * correlation in unknown bits across partial products?") left by
-			 * Harishankar et al. However, we know for sure that LSB(a) is either
-			 * 0 or 1, from which we could find two possible partial products and
-			 * take a union. This improves the precision in a significant number of
-			 * cases.
-			 *
-			 * The first partial product (acc_0) is for the case LSB(a) = 0;
-			 * but acc_0 = acc + 0 * b = acc.
-			 * The second partial product (acc_1) is for the case LSB(a) = 1;
-			 * acc_1 = tnum_add(acc, b).
+			/* acc += tnum_union(acc_0, acc_1), where acc_0 and
+			 * acc_1 are partial accumulators for cases
+			 * LSB(a) = certain 0 and LSB(a) = certain 1.
+			 * acc_0 = acc + 0 * b = acc.
+			 * acc_1 = acc + 1 * b = tnum_add(acc, b).
 			 */
 
-			acc = tnum_union(acc, tnum_add(acc, b)); /* tnum_union(acc_0, acc_1) */
+			acc = tnum_union(acc, tnum_add(acc, b));
 		}
 		/* Note: no case for LSB is certain 0 */
 		a = tnum_rshift(a, 1);
