@@ -138,7 +138,7 @@ simple `make` should work.
 ## Options
 
 - `--commutative`: try both `P*Q` and `Q*P`; then pick the best based
-  on the popcount of result.mask.
+  on the popcount of result.mask (only for the new algorithm).
 
 - `--bits N`: set the range to [0, 2^N) (for each of P.mask, P.value,
   Q.mask, and Q.value, excluding the ill-formed ones).
