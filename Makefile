@@ -1,7 +1,8 @@
 CSRC=main.c main.h lib.c lib.h nggvector.c nggvector.h
+CFLAGS=-Wall -Wextra -O2
 
 experi: $(CSRC)
-	gcc -O2 -o experi -fopenmp $(CSRC) -lm
+	gcc $(CFLAGS) -o experi -fopenmp $(CSRC) -lm
 
 main.h: main.c
 

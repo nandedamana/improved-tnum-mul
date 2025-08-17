@@ -225,7 +225,7 @@ _Bool ingamma(u64 x, struct tnum T)
 
 void print_tnum(char *lbl, struct tnum x)
 {
-	printf("%s = { mask: %u, value: %u }\n", lbl, x.mask, x.value);
+	printf("%s = { mask: %lu, value: %lu }\n", lbl, x.mask, x.value);
 }
 
 _Bool tnums_differ(struct tnum x, struct tnum y)
