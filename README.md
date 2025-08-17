@@ -143,6 +143,8 @@ simple `make` should work.
 - `--bits N`: set the range to [0, 2^N) (for each of P.mask, P.value,
   Q.mask, and Q.value, excluding the ill-formed ones).
 
+- `--no-print-each`: do not print the stats for each tnum pair tested.
+
 - `--print-sets`: print the concrete sets.
 
 ## Copyright

@@ -10,7 +10,7 @@ uint64_t MAX_U64 = 16;
 tnum getalpha(u64vector *xs)
 {
 	int i;
-	assert(u64vector_get_count(xs) > 0); /* main.ngg:27 */
+	assert(u64vector_get_count(xs) > 0); /* main.ngg:29 */
 
 	tnum T = TNUM(u64vector_get_item(xs, 0), 0);
 
@@ -125,7 +125,7 @@ void printvec(const char * lbl, u64vector *vec)
 	puts(" }");
 }
 
-_ngg_tuple_isoptimal isoptimal(tnum P, tnum Q, _Bool commutative, _Bool print_sets)
+_ngg_tuple_isoptimal isoptimal(tnum P, tnum Q, _Bool commutative, _Bool print_each, _Bool print_sets)
 {
 	tnum linprod = tnum_mul(P, Q);
 	tnum _tmp_1;
@@ -146,36 +146,37 @@ _ngg_tuple_isoptimal isoptimal(tnum P, tnum Q, _Bool commutative, _Bool print_se
 
 	u64vector *gamma_optprod = getgamma(optprod);
 
-	print_tnum("P", P);
-	print_tnum("Q", Q);
-	print_tnum("linprod", linprod);
-	print_tnum("myprod", myprod);
-	print_tnum("optprod", optprod);
+	if(print_each) {
+		print_tnum("P", P);
+		print_tnum("Q", Q);
+		print_tnum("linprod", linprod);
+		print_tnum("myprod", myprod);
+		print_tnum("optprod", optprod);
 
-	printf("count(gamma_linprod) = %d\n", u64vector_get_count(gamma_linprod));
-	printf("count(gamma_myprod) = %d\n", u64vector_get_count(gamma_myprod));
-	printf("count(gamma_P) = %d\n", u64vector_get_count(gamma_P));
-	printf("count(gamma_Q) = %d\n", u64vector_get_count(gamma_Q));
-	printf("count(exactprods) = %d\n", u64vector_get_count(exactprods));
-	printf("count(gamma_optprod) = %d\n", u64vector_get_count(gamma_optprod));
+		printf("count(gamma_linprod) = %d\n", u64vector_get_count(gamma_linprod));
+		printf("count(gamma_myprod) = %d\n", u64vector_get_count(gamma_myprod));
+		printf("count(gamma_P) = %d\n", u64vector_get_count(gamma_P));
+		printf("count(gamma_Q) = %d\n", u64vector_get_count(gamma_Q));
+		printf("count(exactprods) = %d\n", u64vector_get_count(exactprods));
+		printf("count(gamma_optprod) = %d\n", u64vector_get_count(gamma_optprod));
 
-	if(print_sets) {
-		printvec("gamma_linprod", gamma_linprod);
-		printvec("gamma_myprod", gamma_myprod);
-		printvec("gamma_P", gamma_P);
-		printvec("gamma_Q", gamma_Q);
-		printvec("exactprods", exactprods);
-		printvec("gamma_optprod", gamma_optprod);
+		if(print_sets) {
+			printvec("gamma_linprod", gamma_linprod);
+			printvec("gamma_myprod", gamma_myprod);
+			printvec("gamma_P", gamma_P);
+			printvec("gamma_Q", gamma_Q);
+			printvec("exactprods", exactprods);
+			printvec("gamma_optprod", gamma_optprod);
+		}
 	}
 
-	assert(!(u64vector_get_count(gamma_myprod) < u64vector_get_count(exactprods))); /* main.ngg:143 */
+	assert(!(u64vector_get_count(gamma_myprod) < u64vector_get_count(exactprods))); /* main.ngg:147 */
 
-	assert(u64vector_get_count(gamma_optprod) <= u64vector_get_count(gamma_myprod)); /* main.ngg:146 */
+	assert(u64vector_get_count(gamma_optprod) <= u64vector_get_count(gamma_myprod)); /* main.ngg:150 */
 
-	assert(left_subset_of_right(exactprods, gamma_myprod)); /* main.ngg:148 */
+	assert(left_subset_of_right(exactprods, gamma_myprod)); /* main.ngg:152 */
 
 	_Bool optimal = !tnums_differ(myprod, optprod);
-	puts((optimal ? "TAG: optimal" : "TAG: suboptimal"));
 
 	MineVsKernel _tmp_2;
 	if(u64vector_get_count(gamma_myprod) < u64vector_get_count(gamma_linprod)) {
@@ -186,25 +187,29 @@ _ngg_tuple_isoptimal isoptimal(tnum P, tnum Q, _Bool commutative, _Bool print_se
 
 	MineVsKernel mine_vs_kernel = _tmp_2;
 
-	switch(mine_vs_kernel) {
-	case MINE_VS_KERNEL_MINE_BETTER:
-	{
-		puts("TAG: better");
-		break;
-	}
-	case MINE_VS_KERNEL_SAME:
-	{
-		puts("TAG: same");
-		break;
-	}
-	case MINE_VS_KERNEL_MINE_WORSE:
-	{
-		puts("TAG: worse");
-		break;
-	}
-	}
+	if(print_each) {
+		puts((optimal ? "TAG: optimal" : "TAG: suboptimal"));
 
-	puts("");
+		switch(mine_vs_kernel) {
+		case MINE_VS_KERNEL_MINE_BETTER:
+		{
+			puts("TAG: better");
+			break;
+		}
+		case MINE_VS_KERNEL_SAME:
+		{
+			puts("TAG: same");
+			break;
+		}
+		case MINE_VS_KERNEL_MINE_WORSE:
+		{
+			puts("TAG: worse");
+			break;
+		}
+		}
+
+		putchar('\n');
+	}
 
 	if(gamma_linprod) {
 		u64vector_destruct(gamma_linprod);
@@ -239,12 +244,23 @@ _ngg_tuple_isoptimal isoptimal(tnum P, tnum Q, _Bool commutative, _Bool print_se
 	return (_ngg_tuple_isoptimal){optimal, !tnums_differ(linprod, optprod), mine_vs_kernel};
 }
 
+void print_cumustat(const char * lbl, int bits, CumulativeStat cumustat)
+{
+	printf("%s (bits = %d): \n", lbl, bits);
+	printf("  better = %d\n", cumustat.bettercount);
+	printf("  same   = %d\n", cumustat.samecount);
+	printf("  worse  = %d\n", cumustat.worsecount);
+	printf("  myprod optimal cases  = %d / %d\n", cumustat.optimalcount, cumustat.totalcount);
+	printf("  linprod optimal cases = %d / %d\n", cumustat.optimalcount_linux, cumustat.totalcount);
+}
+
 int main(int argc, char * *argv)
 {
 	size_t xm;
 	int bits = 3;
 	_Bool commutative = false;
 	_Bool print_sets = commutative;
+	_Bool print_each = true;
 
 	int argi = 1;
 	while(argi < argc) {
@@ -258,6 +274,8 @@ int main(int argc, char * *argv)
 			}
 
 			bits = atoi(argv[argi]);
+		} else if(0 == strcmp(argv[argi], "--no-print-each")) {
+			print_each = false;
 		} else if(0 == strcmp(argv[argi], "--print-sets")) {
 			print_sets = true;
 		} else {
@@ -268,13 +286,10 @@ int main(int argc, char * *argv)
 		argi += 1;
 	}
 
-	int bettercount = 0;
-	int samecount = bettercount;
-	int worsecount = bettercount;
-	int optimalcount = bettercount;
-	int optimalcount_linux = bettercount;
-	int totalcount = bettercount;
+	CumulativeStat cumustat = cumulative_stat_default();
 
+	omp_lock_t statlock;
+	omp_init_lock(&statlock);
 	unsigned int maxnum = (unsigned int) (pow(2, bits) - 1);
 	_Bool optimal_for_bits = true;
 
@@ -296,56 +311,61 @@ int main(int argc, char * *argv)
 						continue;
 					}
 
-					flockfile(stdout);
-					_ngg_tuple_isoptimal _ngg_tmp_0 = isoptimal(x, y, commutative, print_sets);
+					if(print_each) {
+						flockfile(stdout);
+					}
+
+					_ngg_tuple_isoptimal _ngg_tmp_0 = isoptimal(x, y, commutative, print_each, print_sets);
 					MineVsKernel mine_vs_kernel = _ngg_tmp_0.m2;
 					_Bool linoptimal = _ngg_tmp_0.m1;
 					_Bool optimal = _ngg_tmp_0.m0;
 
+					omp_set_lock(&statlock);
 					if(optimal) {
-						optimalcount += 1;
+						cumustat.optimalcount += 1;
 					} else {
 						optimal_for_bits = false;
 					}
 
 					if(linoptimal) {
-						optimalcount_linux += 1;
+						cumustat.optimalcount_linux += 1;
 					}
 
 					switch(mine_vs_kernel) {
 					case MINE_VS_KERNEL_MINE_BETTER:
 					{
-						bettercount += 1;
+						cumustat.bettercount += 1;
 						break;
 					}
 					case MINE_VS_KERNEL_SAME:
 					{
-						samecount += 1;
+						cumustat.samecount += 1;
 						break;
 					}
 					case MINE_VS_KERNEL_MINE_WORSE:
 					{
-						worsecount += 1;
+						cumustat.worsecount += 1;
 						break;
 					}
 					}
 
-					totalcount += 1;
+					cumustat.totalcount += 1;
 
-					printf("mine vs kernel (bits = %d): \n", bits);
-					printf("  better = %d\n", bettercount);
-					printf("  same   = %d\n", samecount);
-					printf("  worse  = %d\n", worsecount);
-					printf("  myprod optimal cases  = %d / %d\n", optimalcount, totalcount);
-					printf("  linprod optimal cases = %d / %d\n", optimalcount_linux, totalcount);
-					puts("----------------------------------------------------------");
-					funlockfile(stdout);
+					if(print_each) {
+						print_cumustat("mine vs kernel stats so far", bits, cumustat);
+						puts("----------------------------------------------------------");
+						funlockfile(stdout);
+					}
+
+					omp_unset_lock(&statlock);
 				}
 			}
 		}
 	}
 
-	printf("is optimal? (bits = %d): %d\n", bits, optimal_for_bits);
+	omp_destroy_lock(&statlock);
+	print_cumustat("mine vs kernel final stats", bits, cumustat);
+	printf("  is optimal for %d bit(s): %d\n", bits, optimal_for_bits);
 
 	return 0;
 }
@@ -356,5 +376,17 @@ _ngg_tuple_isoptimal _ngg_tuple_isoptimal_default()
 	s.m0 = false;
 	s.m1 = false;
 	s.m2 = MINE_VS_KERNEL_MINE_BETTER;
+	return s;
+}
+
+CumulativeStat cumulative_stat_default()
+{
+	CumulativeStat s;
+	s.bettercount = 0;
+	s.samecount = 0;
+	s.worsecount = 0;
+	s.optimalcount = 0;
+	s.optimalcount_linux = 0;
+	s.totalcount = 0;
 	return s;
 }
