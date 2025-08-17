@@ -364,6 +364,10 @@ int main(int argc, char * *argv)
 	}
 
 	omp_destroy_lock(&statlock);
+	double pwr = pow(3, bits);
+
+	assert(cumustat.totalcount == (pwr * pwr)); /* main.ngg:298 */
+
 	print_cumustat("mine vs kernel final stats", bits, cumustat);
 	printf("  is optimal for %d bit(s): %d\n", bits, optimal_for_bits);
 

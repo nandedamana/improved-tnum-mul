@@ -293,6 +293,10 @@ fun $main
 
 	v omp_destroy_lock(&statlock);
 
+	// This assertion helps detect race condition
+	var pwr / =pow/[3, bits]
+	assert eq totalcount\cumustat (mul pwr pwr)
+
 	=print-cumustat/["mine vs kernel final stats", bits, cumustat]
 	=printf/['  is optimal for %d bit(s): %d\n', bits, optimal_for_bits]
 
