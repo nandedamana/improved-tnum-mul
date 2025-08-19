@@ -172,7 +172,7 @@ struct tnum my_tnum_mul_commutative(struct tnum a, struct tnum b)
 	//return tnum_intersect(t1, t2);
 
 	// Better than tnum_intersect(t1, t2);
-	if (__builtin_popcount(t1.mask) < __builtin_popcount(t2.mask))
+	if (__builtin_popcountl(t1.mask) < __builtin_popcountl(t2.mask))
 		return t1;
 
 	return t2;
