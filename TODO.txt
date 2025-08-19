@@ -1,0 +1,6 @@
+- 2025-08-19 - Make the comparison use less memory by not constructing the 
+  concrete sets. Use the following:
+  - Counting gamma(T) based on popcount(T.mask)
+  - ingamma (from my proof)
+  - Some faster iteration method referred to from 
+    https://dougallj.wordpress.com/2020/01/13/bit-twiddling-addition-with-unknown-bits/
